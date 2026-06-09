@@ -11,8 +11,10 @@ let calendarMode = 'month';  // 'month' | 'week'
 let currentDate = new Date(); // Anchor date for calendar grid calculations
 let selectedDay = new Date().toISOString().split('T')[0]; // For daily list in monthly view
 
-// Check if we should use local storage fallback (e.g. running via file:// protocol directly)
-const isLocalMode = window.location.protocol === 'file:' || window.location.hostname === '';
+const isLocalMode = window.location.protocol === 'file:' || 
+                     window.location.hostname === '' || 
+                     window.location.hostname.includes('github.io') || 
+                     window.location.hostname.includes('netlify.app');
 
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQeJw1ItBribrLsmnhX-Hbm8JiSwQM_DEMhbnmf--m0FeBVu_oKD9TrGAahfgxwmYfIA/exec";
 let dbInMemory = null;
