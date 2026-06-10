@@ -38,29 +38,91 @@ async function getPassphraseHash(passphrase) {
   return sha256Pure(passphrase);
 }
 
-// Fetch database from Firebase Firestore using the passphrase hash as the document ID
-async function loadDatabaseFromCloud() {
-  const passphrase = localStorage.getItem('kinship_sync_passphrase');
-  if (!passphrase) {
-    throw new Error("Sync Passphrase not set");
+let firestoreListener = null;
+
+// Fetch database from Firebase Firestore using the passphrase hash as the document ID, and listen for live updates
+function loadDatabaseFromCloud() {
+  return new Promise(async (resolve, reject) => {
+    const passphrase = localStorage.getItem('kinship_sync_passphrase');
+    if (!passphrase) {
+      reject(new Error("Sync Passphrase not set"));
+      return;
+    }
+    
+    try {
+      const docId = await getPassphraseHash(passphrase);
+      const docRef = dbFirestore.collection("calendars").doc(docId);
+      
+      if (firestoreListener) {
+        firestoreListener(); // unsubscribe from previous listener if active
+      }
+      
+      let isFirstEmission = true;
+      
+      firestoreListener = docRef.onSnapshot(async (doc) => {
+        if (!doc.exists) {
+          // If the calendar is brand new, seed it with default Adams family values
+          dbInMemory = getSeedDatabase();
+          try {
+            await docRef.set(dbInMemory);
+          } catch (err) {
+            console.error("Firestore write error during seeding:", err);
+            if (isFirstEmission) {
+              reject(new Error("Failed to initialize database in Firestore. Check rules."));
+              return;
+            }
+          }
+        } else {
+          dbInMemory = doc.data();
+        }
+        
+        if (isFirstEmission) {
+          isFirstEmission = false;
+          resolve();
+        } else {
+          // Sync changes from other clients to the UI in real time
+          await syncUIWithDatabase();
+        }
+      }, (err) => {
+        console.error("Firestore live listener error:", err);
+        if (isFirstEmission) {
+          reject(new Error("Failed to load database. Ensure Firestore is set up in test mode."));
+        } else {
+          showToast("Sync connection lost. Check internet connection.", "error");
+        }
+      });
+      
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+// Synchronize client UI state when database is updated from Firestore in real time
+async function syncUIWithDatabase() {
+  if (!currentUser) return;
+  
+  const freshUser = dbInMemory.users.find(u => u.id === currentUser.id);
+  if (!freshUser) {
+    handleTokenExpired();
+    return;
+  }
+  currentUser = freshUser;
+  
+  if (currentUser.familyId) {
+    currentFamily = dbInMemory.families.find(f => f.id === currentUser.familyId);
+    await loadFamilyMembers();
+    await loadEvents();
+  } else {
+    currentFamily = null;
+    familyMembers = [];
+    activeFilters = [];
+    document.getElementById('calendar-filter-options').innerHTML = '';
   }
   
-  const docId = await getPassphraseHash(passphrase);
-  
-  try {
-    const docRef = dbFirestore.collection("calendars").doc(docId);
-    const doc = await docRef.get();
-    
-    if (!doc.exists) {
-      // If the calendar is brand new, seed it with default Adams family values
-      dbInMemory = getSeedDatabase();
-      await docRef.set(dbInMemory);
-    } else {
-      dbInMemory = doc.data();
-    }
-  } catch (err) {
-    console.error("Firestore read error:", err);
-    throw new Error("Failed to load database from Firebase. Ensure Firestore is set up in test mode.");
+  updateHeaderAndProfile();
+  if (activeView === 'family') {
+    renderFamilyHub();
   }
 }
 
