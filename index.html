@@ -42,7 +42,10 @@
           <input type="text" id="login-username" placeholder="Enter username" required autocomplete="username">
         </div>
         <div class="form-group">
-          <label for="login-password">Password</label>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label for="login-password">Password</label>
+            <a href="#" class="forgot-link" onclick="showForgotPassword(event)" style="font-size: 11px; color: var(--accent-primary); text-decoration: none; font-weight: 600;">Forgot Password?</a>
+          </div>
           <input type="password" id="login-password" placeholder="Enter password" required autocomplete="current-password">
         </div>
         <button type="submit" class="btn btn-primary btn-block">
@@ -58,6 +61,10 @@
         <div class="form-group">
           <label for="register-name">Your Display Name</label>
           <input type="text" id="register-name" placeholder="e.g. Sarah (Mom)" required>
+        </div>
+        <div class="form-group">
+          <label for="register-email">Your Email Address</label>
+          <input type="email" id="register-email" placeholder="e.g. sarah@adams.com" required>
         </div>
         <div class="form-group">
           <label for="register-username">Choose Username</label>
@@ -255,6 +262,10 @@
             <div class="form-group">
               <label for="new-member-name">Member Name</label>
               <input type="text" id="new-member-name" placeholder="e.g. Leo (Son)" required>
+            </div>
+            <div class="form-group">
+              <label for="new-member-email">Email Address</label>
+              <input type="email" id="new-member-email" placeholder="e.g. leo@adams.com" required>
             </div>
             <div class="form-group">
               <label for="new-member-username">Username</label>
@@ -537,6 +548,54 @@
     </div>
   </div>
 
+  <!-- FORGOT PASSWORD MODAL -->
+  <div id="forgot-modal" class="modal-overlay" onclick="closeModalOnOverlayClick(event)">
+    <div class="modal-sheet" style="max-width: 400px; margin: auto;">
+      <div class="modal-header">
+        <h3>Reset Password</h3>
+        <button class="btn btn-icon btn-close" onclick="closeForgotPassword()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Verification Form -->
+      <form id="forgot-verify-form" onsubmit="handleForgotPasswordVerify(event)">
+        <p class="field-help-text" style="margin-bottom: 16px;">Enter your username and email to verify your identity.</p>
+        <div class="form-group">
+          <label for="forgot-username">Username</label>
+          <input type="text" id="forgot-username" placeholder="e.g. sarah" required>
+        </div>
+        <div class="form-group">
+          <label for="forgot-email">Email Address</label>
+          <input type="email" id="forgot-email" placeholder="e.g. sarah@adams.com" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Verify Identity</button>
+      </form>
+
+      <!-- Reset Password Form (Hidden initially) -->
+      <form id="forgot-reset-form" onsubmit="handleForgotPasswordReset(event)" style="display: none;">
+        <p class="field-help-text" style="margin-bottom: 16px; color: var(--success-color);">Identity verified! Choose a new password below.</p>
+        <input type="hidden" id="forgot-reset-userId">
+        <div class="form-group">
+          <label for="forgot-new-password">New Password</label>
+          <input type="password" id="forgot-new-password" placeholder="Min 6 characters" minlength="6" required>
+        </div>
+        <div class="form-group">
+          <label for="forgot-confirm-password">Confirm Password</label>
+          <input type="password" id="forgot-confirm-password" placeholder="Confirm new password" minlength="6" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Update Password</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase Compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  
   <script src="app.js"></script>
 </body>
 </html>

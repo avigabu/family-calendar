@@ -16,77 +16,69 @@ const isLocalMode = window.location.protocol === 'file:' ||
                      window.location.hostname.includes('github.io') || 
                      window.location.hostname.includes('netlify.app');
 
-const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQeJw1ItBribrLsmnhX-Hbm8JiSwQM_DEMhbnmf--m0FeBVu_oKD9TrGAahfgxwmYfIA/exec";
+// Firebase Configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyD86BH1L9T0V5CyLJRitOtt140RwbYYaDg",
+  authDomain: "kinship-14ac4.firebaseapp.com",
+  projectId: "kinship-14ac4",
+  storageBucket: "kinship-14ac4.firebasestorage.app",
+  messagingSenderId: "49614095892",
+  appId: "1:49614095892:web:0de9e0df57530d4e040901",
+  measurementId: "G-01587NC605"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const dbFirestore = firebase.firestore();
+
 let dbInMemory = null;
 
-// Communicates with the Google Apps Script Web App securely
-async function callGoogleScript(action, payload = {}) {
+// Helper to calculate SHA-256 of the passphrase for document lookup
+async function getPassphraseHash(passphrase) {
+  return sha256Pure(passphrase);
+}
+
+// Fetch database from Firebase Firestore using the passphrase hash as the document ID
+async function loadDatabaseFromCloud() {
   const passphrase = localStorage.getItem('kinship_sync_passphrase');
   if (!passphrase) {
     throw new Error("Sync Passphrase not set");
   }
   
-  const body = {
-    action: action,
-    apiKey: passphrase,
-    ...payload
-  };
+  const docId = await getPassphraseHash(passphrase);
   
-  let res;
   try {
-    res = await fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'cors',
-      headers: {
-        'Content-Type': 'text/plain;charset=utf-8' // Bypasses CORS preflight check
-      },
-      body: JSON.stringify(body),
-      redirect: 'follow'
-    });
-  } catch (netErr) {
-    console.error("Google Script connection error:", netErr);
-    throw new Error("Connection failed. Check your internet connection or the Google Script URL.");
-  }
-  
-  if (!res.ok) {
-    throw new Error("Failed to communicate with Google Drive (Status " + res.status + ")");
-  }
-  
-  let data;
-  try {
-    data = await res.json();
-  } catch (jsonErr) {
-    const rawText = await res.text();
-    console.error("Non-JSON response from Google Apps Script:", rawText);
+    const docRef = dbFirestore.collection("calendars").doc(docId);
+    const doc = await docRef.get();
     
-    if (rawText.includes("SyntaxError")) {
-      throw new Error("Google Script Error: There is a syntax error in your Google Apps Script. Check its execution logs.");
+    if (!doc.exists) {
+      // If the calendar is brand new, seed it with default Adams family values
+      dbInMemory = getSeedDatabase();
+      await docRef.set(dbInMemory);
+    } else {
+      dbInMemory = doc.data();
     }
-    throw new Error("Google Sync failed. Ensure the script is deployed as 'Execute as: Me' and 'Who has access: Anyone'.");
-  }
-  
-  if (data && data.error) {
-    throw new Error(data.error);
-  }
-  return data;
-}
-
-// Fetch database from Google Drive
-async function loadDatabaseFromCloud() {
-  const data = await callGoogleScript("read");
-  // If the file is empty or brand new, seed it with default Adams family values
-  if (!data || !data.users || data.users.length === 0) {
-    dbInMemory = getSeedDatabase();
-    await saveDatabaseToCloud();
-  } else {
-    dbInMemory = data;
+  } catch (err) {
+    console.error("Firestore read error:", err);
+    throw new Error("Failed to load database from Firebase. Ensure Firestore is set up in test mode.");
   }
 }
 
-// Write the database back to Google Drive
+// Write the database back to Firebase Firestore
 async function saveDatabaseToCloud() {
   if (!dbInMemory) return;
-  await callGoogleScript("write", { db: dbInMemory });
+  
+  const passphrase = localStorage.getItem('kinship_sync_passphrase');
+  if (!passphrase) return;
+  
+  const docId = await getPassphraseHash(passphrase);
+  
+  try {
+    await dbFirestore.collection("calendars").doc(docId).set(dbInMemory);
+  } catch (err) {
+    console.error("Firestore write error:", err);
+    showToast("Cloud sync failed. Ensure Firestore is set up in test mode.", "error");
+  }
 }
 
 // Displays a premium lock screen asking for the sync password
@@ -108,7 +100,7 @@ function promptForPassphrase() {
           </svg>
           <h1>Secure Sync</h1>
         </div>
-        <p class="auth-subtitle">Enter your secret family password to link your Google Drive calendar</p>
+        <p class="auth-subtitle">Enter your secret family password to link your Firebase calendar</p>
       </div>
       <form id="sync-form" onsubmit="submitSyncPassphrase(event)">
         <div class="form-group">
@@ -135,7 +127,7 @@ async function submitSyncPassphrase(e) {
   try {
     await loadDatabaseFromCloud();
     document.getElementById('sync-overlay').remove();
-    showToast('Calendar synced with Google Drive!');
+    showToast('Calendar synced with Firebase!');
     
     if (token) {
       checkAuth();
@@ -154,7 +146,7 @@ async function submitSyncPassphrase(e) {
 
 document.addEventListener('DOMContentLoaded', () => {
   if (isLocalMode) {
-    showToast('Connecting to Google Drive Sync...', 'info');
+    showToast('Connecting to Firebase Sync...', 'info');
     const passphrase = localStorage.getItem('kinship_sync_passphrase');
     if (!passphrase) {
       promptForPassphrase();
@@ -359,6 +351,7 @@ async function handleLogin(e) {
 async function handleRegister(e) {
   e.preventDefault();
   const name = document.getElementById('register-name').value;
+  const email = document.getElementById('register-email').value;
   const username = document.getElementById('register-username').value;
   const password = document.getElementById('register-password').value;
   const color = document.querySelector('input[name="user-color"]:checked').value;
@@ -367,7 +360,7 @@ async function handleRegister(e) {
   try {
     const data = await apiFetch('/api/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ username, password, name, color })
+      body: JSON.stringify({ username, password, name, color, email })
     });
     
     token = data.token;
@@ -413,6 +406,85 @@ async function handleLogout() {
   
   showScreen('auth');
   showToast('Logged out.');
+}
+
+// ================= PASSWORD RESET FLOW =================
+
+function showForgotPassword(e) {
+  if (e) e.preventDefault();
+  document.getElementById('forgot-modal').classList.add('active');
+  document.getElementById('forgot-verify-form').style.display = 'block';
+  document.getElementById('forgot-reset-form').style.display = 'none';
+  document.getElementById('forgot-verify-form').reset();
+}
+
+function closeForgotPassword() {
+  document.getElementById('forgot-modal').classList.remove('active');
+}
+
+async function handleForgotPasswordVerify(e) {
+  e.preventDefault();
+  const username = document.getElementById('forgot-username').value;
+  const email = document.getElementById('forgot-email').value;
+  
+  const submitButton = document.querySelector('#forgot-verify-form button');
+  submitButton.innerText = 'Verifying...';
+  submitButton.disabled = true;
+  
+  try {
+    const data = await apiFetch('/api/auth/verify-reset', {
+      method: 'POST',
+      body: JSON.stringify({ username, email })
+    });
+    
+    // Switch forms
+    document.getElementById('forgot-verify-form').style.display = 'none';
+    document.getElementById('forgot-reset-form').style.display = 'block';
+    document.getElementById('forgot-reset-form').reset();
+    document.getElementById('forgot-reset-userId').value = data.userId;
+  } catch (err) {
+    // apiFetch already toasts the error
+  } finally {
+    submitButton.innerText = 'Verify Identity';
+    submitButton.disabled = false;
+  }
+}
+
+async function handleForgotPasswordReset(e) {
+  e.preventDefault();
+  const userId = document.getElementById('forgot-reset-userId').value;
+  const newPassword = document.getElementById('forgot-new-password').value;
+  const confirmPassword = document.getElementById('forgot-confirm-password').value;
+  
+  if (newPassword !== confirmPassword) {
+    showToast("Passwords do not match.", "error");
+    return;
+  }
+  
+  const submitButton = document.querySelector('#forgot-reset-form button');
+  submitButton.innerText = 'Updating...';
+  submitButton.disabled = true;
+  
+  try {
+    const data = await apiFetch('/api/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ userId, newPassword })
+    });
+    
+    token = data.token;
+    localStorage.setItem('kinship_token', token);
+    currentUser = data.user;
+    currentFamily = data.family;
+    
+    closeForgotPassword();
+    showToast('Password updated and logged in successfully!');
+    initApp();
+  } catch (err) {
+    // apiFetch handles toast
+  } finally {
+    submitButton.innerText = 'Update Password';
+    submitButton.disabled = false;
+  }
 }
 
 // ================= ROUTING & VIEW CONTROLLER =================
@@ -535,6 +607,7 @@ function copyInviteCode() {
 async function handleAddFamilyMember(e) {
   e.preventDefault();
   const name = document.getElementById('new-member-name').value;
+  const email = document.getElementById('new-member-email').value;
   const username = document.getElementById('new-member-username').value;
   const password = document.getElementById('new-member-password').value;
   const color = document.querySelector('input[name="new-user-color"]:checked').value;
@@ -542,7 +615,7 @@ async function handleAddFamilyMember(e) {
   try {
     await apiFetch('/api/family/add-member', {
       method: 'POST',
-      body: JSON.stringify({ name, username, password, color })
+      body: JSON.stringify({ name, username, password, color, email })
     });
     
     showToast(`${name} added to family!`);
@@ -1248,21 +1321,21 @@ async function handleLocalRoute(url, options) {
   const passphrase = localStorage.getItem('kinship_sync_passphrase');
   if (!passphrase) {
     promptForPassphrase();
-    throw new Error("Please enter your family passphrase to sync with Google Drive.");
+    throw new Error("Please enter your family passphrase to sync with Firebase.");
   }
   
-  // Ensure the database is loaded from Google Drive
+  // Ensure the database is loaded from Firebase
   if (!dbInMemory) {
     try {
       await loadDatabaseFromCloud();
     } catch (e) {
-      throw new Error("Failed to load database from Google Drive: " + e.message);
+      throw new Error("Failed to load database from Firebase: " + e.message);
     }
   }
   
   let db = dbInMemory;
   
-  // Helper to save database updates dynamically in the background to Google Drive
+  // Helper to save database updates dynamically in the background to Firebase
   const saveDb = () => {
     dbInMemory = db;
     saveDatabaseToCloud().catch(err => {
@@ -1292,7 +1365,7 @@ async function handleLocalRoute(url, options) {
     return { user: safeUser, family };
     
   } else if (url === '/api/auth/register') {
-    const { username, password, name, color } = body;
+    const { username, password, name, color, email } = body;
     if (db.users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
       throw new Error('Username already taken.');
     }
@@ -1301,6 +1374,7 @@ async function handleLocalRoute(url, options) {
     const newUser = {
       id: 'usr_' + generateUUID(),
       username,
+      email: email || '',
       passwordHash: uHash,
       salt: uSalt,
       name,
@@ -1324,6 +1398,32 @@ async function handleLocalRoute(url, options) {
     
     const hash = await clientHashPassword(password, user.salt);
     if (user.passwordHash !== hash) throw new Error('Invalid username or password.');
+    
+    const tokenVal = 'tok_' + generateUUID();
+    db.sessions[tokenVal] = { userId: user.id };
+    saveDb();
+    
+    const { passwordHash: h, salt: s, ...safeUser } = user;
+    const family = user.familyId ? db.families.find(f => f.id === user.familyId) : null;
+    return { token: tokenVal, user: safeUser, family };
+    
+  } else if (url === '/api/auth/verify-reset') {
+    const { username, email } = body;
+    const user = db.users.find(u => u.username.toLowerCase() === username.toLowerCase().trim() && 
+                                    u.email && u.email.toLowerCase() === email.toLowerCase().trim());
+    if (!user) {
+      throw new Error('Identity verification failed. Username and Email do not match.');
+    }
+    return { success: true, userId: user.id };
+    
+  } else if (url === '/api/auth/reset-password') {
+    const { userId, newPassword } = body;
+    const user = db.users.find(u => u.id === userId);
+    if (!user) {
+      throw new Error('User not found.');
+    }
+    const hash = await clientHashPassword(newPassword, user.salt);
+    user.passwordHash = hash;
     
     const tokenVal = 'tok_' + generateUUID();
     db.sessions[tokenVal] = { userId: user.id };
@@ -1380,7 +1480,7 @@ async function handleLocalRoute(url, options) {
     
   } else if (url === '/api/family/add-member') {
     if (!sessionUser || !sessionUser.familyId) throw new Error('You must belong to a family.');
-    const { username, password, name, color } = body;
+    const { username, password, name, color, email } = body;
     if (db.users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
       throw new Error('Username already taken.');
     }
@@ -1389,6 +1489,7 @@ async function handleLocalRoute(url, options) {
     const newUser = {
       id: 'usr_' + generateUUID(),
       username,
+      email: email || '',
       passwordHash: uHash,
       salt: uSalt,
       name,
@@ -1479,6 +1580,7 @@ function getSeedDatabase() {
       {
         id: 'usr_sarah',
         username: 'sarah',
+        email: 'sarah@adams.com',
         passwordHash: '3698271d39176bca27b41e28f3eb805984fefc677f474c92b9a64a42a3e26696', // hash of password123 with salt 'salt_sarah'
         salt: 'salt_sarah',
         name: 'Sarah (Mom)',
@@ -1488,6 +1590,7 @@ function getSeedDatabase() {
       {
         id: 'usr_john',
         username: 'john',
+        email: 'john@adams.com',
         passwordHash: '688b4e1dca656b1a54bbb648d37bc8efb516915f8d975316f67ad1a9b63c73db', // hash of password123 with salt 'salt_john'
         salt: 'salt_john',
         name: 'John (Dad)',
@@ -1497,6 +1600,7 @@ function getSeedDatabase() {
       {
         id: 'usr_leo',
         username: 'leo',
+        email: 'leo@adams.com',
         passwordHash: '1d8070db727094cebc36a22e86f963a3e01df2e223c502f84295a2b4455f55b8', // hash of password123 with salt 'salt_leo'
         salt: 'salt_leo',
         name: 'Leo (Son)',
@@ -1506,6 +1610,7 @@ function getSeedDatabase() {
       {
         id: 'usr_maya',
         username: 'maya',
+        email: 'maya@adams.com',
         passwordHash: 'dc0519c2bdbf1f11ec2f4a7f343fb3a9580f48757d6515f9a33c582ffc330a09', // hash of password123 with salt 'salt_maya'
         salt: 'salt_maya',
         name: 'Maya (Daughter)',
