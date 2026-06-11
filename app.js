@@ -241,15 +241,31 @@ function showToast(message, type = 'success') {
   const container = document.getElementById('toast-container');
   const toast = document.createElement('div');
   toast.className = `toast toast-${type}`;
-  toast.innerHTML = `
-    <span>${message}</span>
-  `;
-  container.appendChild(toast);
   
-  // Clean up element after animation
-  setTimeout(() => {
-    toast.remove();
-  }, 3000);
+  if (type === 'error') {
+    toast.innerHTML = `
+      <span style="flex: 1;">${message}</span>
+      <button class="toast-close-btn" style="background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-weight: 700; font-size: 16px; padding: 0 4px; line-height: 1; transition: color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'">×</button>
+    `;
+    const closeBtn = toast.querySelector('.toast-close-btn');
+    closeBtn.onclick = () => toast.remove();
+    
+    // Also dismiss when clicking the toast itself (optional but handy)
+    toast.style.cursor = 'pointer';
+    toast.onclick = (e) => {
+      if (e.target !== closeBtn) toast.remove();
+    };
+  } else {
+    toast.innerHTML = `
+      <span>${message}</span>
+    `;
+    // Clean up element after animation
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+  
+  container.appendChild(toast);
 }
 
 // Show/Hide page views

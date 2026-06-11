@@ -1411,6 +1411,7 @@ label {
 
 .toast.toast-error {
   border-left: 4px solid var(--danger-color);
+  animation: slideToastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 .toast.toast-success {
