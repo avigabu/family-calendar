@@ -116,7 +116,7 @@ async function loadUserFamilies() {
   try {
     // Query families where members array contains the user's uid
     const snap = await dbFirestore.collection("families")
-      .where("members", "arrayContains", currentUser.uid)
+      .where("members", "array-contains", currentUser.uid)
       .get();
       
     userFamilies = [];
@@ -213,7 +213,7 @@ function setupActiveFamilyListeners() {
     });
     
   membersUnsubscribe = dbFirestore.collection("users")
-    .where("families", "arrayContains", activeFamilyId)
+    .where("families", "array-contains", activeFamilyId)
     .onSnapshot(snap => {
       familyMembers = [];
       snap.forEach(doc => {
@@ -456,14 +456,33 @@ async function handleLogout() {
   }
 }
 
+let isGoogleSigningIn = false;
 async function handleGoogleSignIn() {
+  if (isGoogleSigningIn) return;
+  isGoogleSigningIn = true;
+  
+  const googleBtns = document.querySelectorAll('.btn-google');
+  googleBtns.forEach(btn => {
+    btn.disabled = true;
+    btn.style.opacity = '0.6';
+  });
+  
   const provider = new firebase.auth.GoogleAuthProvider();
   try {
     await auth.signInWithPopup(provider);
     showToast('Signing in with Google...');
   } catch (err) {
     console.error("Google sign in failed:", err);
-    showToast(err.message, 'error');
+    // Ignore user-closed popup errors to keep the interface clean
+    if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+      showToast(err.message, 'error');
+    }
+  } finally {
+    isGoogleSigningIn = false;
+    googleBtns.forEach(btn => {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    });
   }
 }
 
