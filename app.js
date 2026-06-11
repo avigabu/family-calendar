@@ -355,14 +355,19 @@ async function handleRegister(e) {
   submitButton.innerText = 'Registering...';
   submitButton.disabled = true;
   
+  let credential = null;
   try {
+    // 1. Create the Firebase Auth account first (this automatically signs the user in)
+    credential = await auth.createUserWithEmailAndPassword(email, password);
+    const user = credential.user;
+    
+    // 2. Check if username is already taken (rules allow reading now since user is signed in)
     const uSnap = await dbFirestore.collection("users").where("username", "==", username).get();
     if (!uSnap.empty) {
+      // Username is taken! Delete the newly created auth account
+      await user.delete();
       throw new Error("Username already taken. Please choose another one.");
     }
-    
-    const credential = await auth.createUserWithEmailAndPassword(email, password);
-    const user = credential.user;
     
     const userProfileData = {
       name,
@@ -392,7 +397,9 @@ async function handleRegister(e) {
       const inviteCode = document.getElementById('family-code-input').value.trim().toUpperCase();
       const fSnap = await dbFirestore.collection("families").where("inviteCode", "==", inviteCode).get();
       if (fSnap.empty) {
-        throw new Error("Invalid invitation code. Profile created, please join via Family Hub.");
+        // Invite code is invalid! Delete the newly created auth account
+        await user.delete();
+        throw new Error("Invalid invitation code. Registration cancelled.");
       }
       
       const familyDoc = fSnap.docs[0];
@@ -410,6 +417,14 @@ async function handleRegister(e) {
     
   } catch (err) {
     showToast(err.message, 'error');
+    // If registration failed for another reason, delete the auth user if it was created
+    if (credential && credential.user) {
+      try {
+        await credential.user.delete();
+      } catch (cleanUpErr) {
+        console.error("Cleanup user failed:", cleanUpErr);
+      }
+    }
   } finally {
     submitButton.innerHTML = '<span>Create Account</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
     submitButton.disabled = false;
@@ -645,19 +660,20 @@ async function handleAddFamilyMember(e) {
     const secondaryAppName = "temp_" + generateUUID().substring(0, 8);
     secondaryApp = firebase.initializeApp(firebaseConfig, secondaryAppName);
     const secondaryAuth = secondaryApp.auth();
+    const secondaryDb = secondaryApp.firestore();
     
     const credential = await secondaryAuth.createUserWithEmailAndPassword(email, password);
     const newUid = credential.user.uid;
     
-    await secondaryAuth.signOut();
-    
-    await dbFirestore.collection("users").doc(newUid).set({
+    await secondaryDb.collection("users").doc(newUid).set({
       name,
       email,
       username,
       color,
       families: [activeFamilyId]
     });
+    
+    await secondaryAuth.signOut();
     
     const updatedMembers = [...(currentFamily.members || []), newUid];
     await dbFirestore.collection("families").doc(activeFamilyId).update({ members: updatedMembers });
