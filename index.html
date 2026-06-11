@@ -344,7 +344,7 @@
             <form onsubmit="handleCreateFamilyFromHub(event)" style="margin-top: 12px; margin-bottom: 20px; background: rgba(0,0,0,0.15); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); text-align: left;">
               <h4 style="font-size: 13px; margin-bottom: 8px; font-weight: 700;">Create a New Group</h4>
               <div class="form-group" style="margin-bottom: 12px;">
-                <input type="text" id="hub-create-name" placeholder="e.g. Parents & Brothers" required style="padding: 8px 12px; font-size: 13px;">
+                <input type="text" id="hub-create-name-active" placeholder="e.g. Parents & Brothers" required style="padding: 8px 12px; font-size: 13px;">
               </div>
               <button type="submit" class="btn btn-primary btn-sm btn-block">Create Group</button>
             </form>
@@ -352,7 +352,7 @@
             <form onsubmit="handleJoinFamilyFromHub(event)" style="background: rgba(0,0,0,0.15); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); text-align: left;">
               <h4 style="font-size: 13px; margin-bottom: 8px; font-weight: 700;">Join an Existing Group</h4>
               <div class="form-group" style="margin-bottom: 12px;">
-                <input type="text" id="hub-join-code" placeholder="e.g. FAM-A1B2C3" required style="padding: 8px 12px; font-size: 13px;">
+                <input type="text" id="hub-join-code-active" placeholder="e.g. FAM-A1B2C3" required style="padding: 8px 12px; font-size: 13px;">
               </div>
               <button type="submit" class="btn btn-outline btn-sm btn-block">Join Group</button>
             </form>
@@ -367,8 +367,8 @@
           <form onsubmit="handleCreateFamilyFromHub(event)" style="margin-bottom: 2rem;">
             <h3>Create a New Family Group</h3>
             <div class="form-group">
-              <label for="hub-create-name">Family Surname / Group Name</label>
-              <input type="text" id="hub-create-name" placeholder="e.g. Smith Family" required>
+              <label for="hub-create-name-empty">Family Surname / Group Name</label>
+              <input type="text" id="hub-create-name-empty" placeholder="e.g. Smith Family" required>
             </div>
             <button type="submit" class="btn btn-primary btn-block">Create Family Group</button>
           </form>
@@ -380,8 +380,8 @@
           <form onsubmit="handleJoinFamilyFromHub(event)">
             <h3>Join with Invite Code</h3>
             <div class="form-group">
-              <label for="hub-join-code">Invitation Code</label>
-              <input type="text" id="hub-join-code" placeholder="e.g. FAM-A1B2C3" required>
+              <label for="hub-join-code-empty">Invitation Code</label>
+              <input type="text" id="hub-join-code-empty" placeholder="e.g. FAM-A1B2C3" required>
             </div>
             <button type="submit" class="btn btn-outline btn-block">Join Family Group</button>
           </form>

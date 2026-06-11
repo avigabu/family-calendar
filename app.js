@@ -1262,7 +1262,7 @@ function editEventFromDetails() {
 // Hub actions for joining/creating family groups
 async function handleCreateFamilyFromHub(e) {
   e.preventDefault();
-  const name = document.getElementById('hub-create-name').value;
+  const name = e.target.querySelector('input').value;
   
   try {
     const inviteCode = 'FAM-' + generateUUID().substring(0, 6).toUpperCase();
@@ -1287,7 +1287,7 @@ async function handleCreateFamilyFromHub(e) {
     activeFamilyId = familyId;
     localStorage.setItem('kinship_active_family_id', activeFamilyId);
     
-    document.getElementById('hub-create-name').value = '';
+    e.target.reset();
     
   } catch (err) {
     showToast(err.message, 'error');
@@ -1296,7 +1296,7 @@ async function handleCreateFamilyFromHub(e) {
 
 async function handleJoinFamilyFromHub(e) {
   e.preventDefault();
-  let inviteCode = document.getElementById('hub-join-code').value.trim().toUpperCase();
+  let inviteCode = e.target.querySelector('input').value.trim().toUpperCase();
   if (inviteCode && !inviteCode.startsWith('FAM-')) {
     inviteCode = 'FAM-' + inviteCode;
   }
@@ -1329,7 +1329,7 @@ async function handleJoinFamilyFromHub(e) {
     activeFamilyId = familyId;
     localStorage.setItem('kinship_active_family_id', activeFamilyId);
     
-    document.getElementById('hub-join-code').value = '';
+    e.target.reset();
     
   } catch (err) {
     showToast(err.message, 'error');
