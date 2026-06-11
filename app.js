@@ -410,7 +410,10 @@ async function handleRegister(e) {
       
       userProfileData.families.push(createdFamilyId);
     } else {
-      const inviteCode = document.getElementById('family-code-input').value.trim().toUpperCase();
+      let inviteCode = document.getElementById('family-code-input').value.trim().toUpperCase();
+      if (inviteCode && !inviteCode.startsWith('FAM-')) {
+        inviteCode = 'FAM-' + inviteCode;
+      }
       const fSnap = await dbFirestore.collection("families").where("inviteCode", "==", inviteCode).get();
       if (fSnap.empty) {
         // Invite code is invalid! Delete the newly created auth account
@@ -1293,7 +1296,10 @@ async function handleCreateFamilyFromHub(e) {
 
 async function handleJoinFamilyFromHub(e) {
   e.preventDefault();
-  const inviteCode = document.getElementById('hub-join-code').value.trim().toUpperCase();
+  let inviteCode = document.getElementById('hub-join-code').value.trim().toUpperCase();
+  if (inviteCode && !inviteCode.startsWith('FAM-')) {
+    inviteCode = 'FAM-' + inviteCode;
+  }
   
   try {
     const fSnap = await dbFirestore.collection("families").where("inviteCode", "==", inviteCode).get();
