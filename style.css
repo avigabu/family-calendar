@@ -1476,3 +1476,25 @@ label {
   from { opacity: 1; }
   to { opacity: 0; }
 }
+
+/* Family Switcher Selector */
+.family-selector-dropdown {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 12px;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+  padding: 0 4px;
+  width: auto;
+  max-width: 140px;
+}
+
+.family-selector-dropdown option {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-weight: 600;
+  padding: 8px;
+}

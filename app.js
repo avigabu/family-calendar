@@ -1,20 +1,17 @@
 // KINSHIP - Client Application State
-let token = localStorage.getItem('kinship_token');
-let currentUser = null;
-let currentFamily = null;
-let familyMembers = [];
-let events = [];
-let activeFilters = []; // User IDs that are visible on the calendar
+let currentUser = null;       // Firebase Auth User object
+let userProfile = null;       // Firestore document data from /users/{uid} (name, email, username, color, families)
+let activeFamilyId = null;    // Current selected family/group ID
+let currentFamily = null;     // Firestore document data for active family (name, inviteCode, members)
+let familyMembers = [];       // Array of user profiles belonging to the active family
+let events = [];              // Array of events belonging to the active family
+let activeFilters = [];       // User IDs that are visible on the calendar
+let userFamilies = [];        // List of family documents the current user belongs to
 
 let activeView = 'calendar'; // 'calendar' | 'family' | 'settings'
 let calendarMode = 'month';  // 'month' | 'week'
 let currentDate = new Date(); // Anchor date for calendar grid calculations
 let selectedDay = new Date().toISOString().split('T')[0]; // For daily list in monthly view
-
-const isLocalMode = window.location.protocol === 'file:' || 
-                     window.location.hostname === '' || 
-                     window.location.hostname.includes('github.io') || 
-                     window.location.hostname.includes('netlify.app');
 
 // Firebase Configuration
 const firebaseConfig = {
@@ -30,198 +27,214 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const dbFirestore = firebase.firestore();
+const auth = firebase.auth();
 
-let dbInMemory = null;
-
-// Helper to calculate SHA-256 of the passphrase for document lookup
-async function getPassphraseHash(passphrase) {
-  return sha256Pure(passphrase);
-}
-
-let firestoreListener = null;
-
-// Fetch database from Firebase Firestore using the passphrase hash as the document ID, and listen for live updates
-function loadDatabaseFromCloud() {
-  return new Promise(async (resolve, reject) => {
-    const passphrase = localStorage.getItem('kinship_sync_passphrase');
-    if (!passphrase) {
-      reject(new Error("Sync Passphrase not set"));
-      return;
-    }
-    
-    try {
-      const docId = await getPassphraseHash(passphrase);
-      const docRef = dbFirestore.collection("calendars").doc(docId);
-      
-      if (firestoreListener) {
-        firestoreListener(); // unsubscribe from previous listener if active
-      }
-      
-      let isFirstEmission = true;
-      
-      firestoreListener = docRef.onSnapshot(async (doc) => {
-        if (!doc.exists) {
-          // If the calendar is brand new, seed it with default Adams family values
-          dbInMemory = getSeedDatabase();
-          try {
-            await docRef.set(dbInMemory);
-          } catch (err) {
-            console.error("Firestore write error during seeding:", err);
-            if (isFirstEmission) {
-              reject(new Error("Failed to initialize database in Firestore. Check rules."));
-              return;
-            }
-          }
-        } else {
-          dbInMemory = doc.data();
-        }
-        
-        if (isFirstEmission) {
-          isFirstEmission = false;
-          resolve();
-        } else {
-          // Sync changes from other clients to the UI in real time
-          await syncUIWithDatabase();
-        }
-      }, (err) => {
-        console.error("Firestore live listener error:", err);
-        if (isFirstEmission) {
-          reject(new Error("Failed to load database. Ensure Firestore is set up in test mode."));
-        } else {
-          showToast("Sync connection lost. Check internet connection.", "error");
-        }
-      });
-      
-    } catch (err) {
-      reject(err);
-    }
-  });
-}
-
-// Synchronize client UI state when database is updated from Firestore in real time
-async function syncUIWithDatabase() {
-  if (!currentUser) return;
-  
-  const freshUser = dbInMemory.users.find(u => u.id === currentUser.id);
-  if (!freshUser) {
-    handleTokenExpired();
-    return;
+// Enable offline persistence in Firestore
+dbFirestore.enablePersistence().catch(err => {
+  if (err.code == 'failed-precondition') {
+    console.warn("Multiple tabs open, persistence can only be enabled in one tab at a time.");
+  } else if (err.code == 'unimplemented') {
+    console.warn("The current browser does not support persistence.");
   }
-  currentUser = freshUser;
-  
-  if (currentUser.familyId) {
-    currentFamily = dbInMemory.families.find(f => f.id === currentUser.familyId);
-    await loadFamilyMembers();
-    await loadEvents();
-  } else {
-    currentFamily = null;
-    familyMembers = [];
-    activeFilters = [];
-    document.getElementById('calendar-filter-options').innerHTML = '';
-  }
-  
-  updateHeaderAndProfile();
-  if (activeView === 'family') {
-    renderFamilyHub();
-  }
-}
+});
 
-// Write the database back to Firebase Firestore
-async function saveDatabaseToCloud() {
-  if (!dbInMemory) return;
-  
-  const passphrase = localStorage.getItem('kinship_sync_passphrase');
-  if (!passphrase) return;
-  
-  const docId = await getPassphraseHash(passphrase);
-  
-  try {
-    await dbFirestore.collection("calendars").doc(docId).set(dbInMemory);
-  } catch (err) {
-    console.error("Firestore write error:", err);
-    showToast("Cloud sync failed. Ensure Firestore is set up in test mode.", "error");
-  }
-}
-
-// Displays a premium lock screen asking for the sync password
-function promptForPassphrase() {
-  if (document.getElementById('sync-overlay')) return;
-  
-  const overlay = document.createElement('div');
-  overlay.id = 'sync-overlay';
-  overlay.className = 'modal-overlay active';
-  overlay.style.zIndex = '9999';
-  
-  overlay.innerHTML = `
-    <div class="auth-card" style="margin: auto; max-width: 400px; text-align: center;">
-      <div class="auth-header">
-        <div class="logo">
-          <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-          <h1>Secure Sync</h1>
-        </div>
-        <p class="auth-subtitle">Enter your secret family password to link your Firebase calendar</p>
-      </div>
-      <form id="sync-form" onsubmit="submitSyncPassphrase(event)">
-        <div class="form-group">
-          <label for="sync-key-input">Family Passphrase</label>
-          <input type="password" id="sync-key-input" placeholder="Enter password" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">Link Calendar</button>
-      </form>
-    </div>
-  `;
-  document.body.appendChild(overlay);
-}
-
-// Handler for the passphrase entry
-async function submitSyncPassphrase(e) {
-  e.preventDefault();
-  const passphrase = document.getElementById('sync-key-input').value;
-  localStorage.setItem('kinship_sync_passphrase', passphrase);
-  
-  const submitButton = document.querySelector('#sync-form button');
-  submitButton.innerText = 'Linking...';
-  submitButton.disabled = true;
-  
-  try {
-    await loadDatabaseFromCloud();
-    document.getElementById('sync-overlay').remove();
-    showToast('Calendar synced with Firebase!');
-    
-    if (token) {
-      checkAuth();
-    } else {
-      showScreen('auth');
-    }
-  } catch (err) {
-    localStorage.removeItem('kinship_sync_passphrase');
-    showToast(err.message, 'error');
-    submitButton.innerText = 'Link Calendar';
-    submitButton.disabled = false;
-  }
-}
+let eventsUnsubscribe = null;
+let membersUnsubscribe = null;
+let userProfileUnsubscribe = null;
 
 // ================= INITIALIZATION & AUTH =================
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (isLocalMode) {
-    showToast('Connecting to Firebase Sync...', 'info');
-    const passphrase = localStorage.getItem('kinship_sync_passphrase');
-    if (!passphrase) {
-      promptForPassphrase();
-      return;
+  // Listen for authentication changes
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      showToast('Signing in...', 'info');
+      currentUser = user;
+      
+      // Listen to user profile changes in real-time
+      if (userProfileUnsubscribe) userProfileUnsubscribe();
+      userProfileUnsubscribe = dbFirestore.collection("users").doc(user.uid).onSnapshot(async (doc) => {
+        if (!doc.exists) {
+          // If this is a Google sign-in user who hasn't completed onboarding yet, show the modal
+          const isGoogleUser = user.providerData.some(p => p.providerId === 'google.com');
+          if (isGoogleUser) {
+            const onboardingModal = document.getElementById('google-onboarding-modal');
+            if (onboardingModal) onboardingModal.classList.add('active');
+          } else {
+            console.warn("User profile does not exist for user:", user.uid);
+          }
+          return;
+        }
+        
+        // Profile exists, make sure onboarding modal is closed
+        const onboardingModal = document.getElementById('google-onboarding-modal');
+        if (onboardingModal) onboardingModal.classList.remove('active');
+        
+        userProfile = doc.data();
+        await loadUserFamilies();
+      }, err => {
+        console.error("Profile load failed:", err);
+      });
+      
+    } else {
+      handleLogoutCleanup();
     }
-  }
-  
-  if (token) {
-    checkAuth();
-  } else {
-    showScreen('auth');
-  }
+  });
 });
+
+function handleLogoutCleanup() {
+  currentUser = null;
+  userProfile = null;
+  activeFamilyId = null;
+  currentFamily = null;
+  userFamilies = [];
+  familyMembers = [];
+  events = [];
+  activeFilters = [];
+  
+  if (eventsUnsubscribe) { eventsUnsubscribe(); eventsUnsubscribe = null; }
+  if (membersUnsubscribe) { membersUnsubscribe(); membersUnsubscribe = null; }
+  if (userProfileUnsubscribe) { userProfileUnsubscribe(); userProfileUnsubscribe = null; }
+  
+  showScreen('auth');
+  
+  // Reset forms if elements exist
+  const loginForm = document.getElementById('login-form');
+  const registerForm = document.getElementById('register-form');
+  if (loginForm) loginForm.reset();
+  if (registerForm) registerForm.reset();
+  
+  const onboardingModal = document.getElementById('google-onboarding-modal');
+  if (onboardingModal) onboardingModal.classList.remove('active');
+  const onboardingForm = document.getElementById('google-onboarding-form');
+  if (onboardingForm) onboardingForm.reset();
+}
+
+async function loadUserFamilies() {
+  if (!userProfile) return;
+  
+  try {
+    // Query families where members array contains the user's uid
+    const snap = await dbFirestore.collection("families")
+      .where("members", "arrayContains", currentUser.uid)
+      .get();
+      
+    userFamilies = [];
+    snap.forEach(doc => {
+      userFamilies.push({ id: doc.id, ...doc.data() });
+    });
+    
+    if (userFamilies.length > 0) {
+      const savedActive = localStorage.getItem('kinship_active_family_id');
+      if (savedActive && userFamilies.some(f => f.id === savedActive)) {
+        activeFamilyId = savedActive;
+      } else {
+        activeFamilyId = userFamilies[0].id;
+        localStorage.setItem('kinship_active_family_id', activeFamilyId);
+      }
+      currentFamily = userFamilies.find(f => f.id === activeFamilyId);
+      
+      updateFamilySwitcherUI();
+      setupActiveFamilyListeners();
+      
+      showScreen('app');
+      updateHeaderAndProfile();
+    } else {
+      activeFamilyId = null;
+      currentFamily = null;
+      document.getElementById('header-family-badge').style.display = 'none';
+      
+      showScreen('app');
+      updateHeaderAndProfile();
+      
+      renderFamilyHub();
+      navigateTo('family');
+      showToast('Please create or join a family group to start.', 'info');
+    }
+  } catch (err) {
+    console.error("Failed to load families:", err);
+    showToast("Error loading families: " + err.message, "error");
+  }
+}
+
+function updateFamilySwitcherUI() {
+  const container = document.getElementById('header-family-badge');
+  const select = document.getElementById('header-family-select');
+  
+  if (userFamilies.length > 0) {
+    container.style.display = 'block';
+    select.innerHTML = '';
+    
+    userFamilies.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.id;
+      opt.innerText = f.name;
+      if (f.id === activeFamilyId) {
+        opt.selected = true;
+      }
+      select.appendChild(opt);
+    });
+  } else {
+    container.style.display = 'none';
+  }
+}
+
+function switchActiveFamily(familyId) {
+  if (familyId === activeFamilyId) return;
+  activeFamilyId = familyId;
+  localStorage.setItem('kinship_active_family_id', activeFamilyId);
+  currentFamily = userFamilies.find(f => f.id === activeFamilyId);
+  
+  setupActiveFamilyListeners();
+  updateHeaderAndProfile();
+  
+  if (activeView === 'family') {
+    renderFamilyHub();
+  }
+  showToast(`Switched to ${currentFamily.name}`);
+}
+
+function setupActiveFamilyListeners() {
+  if (eventsUnsubscribe) eventsUnsubscribe();
+  if (membersUnsubscribe) membersUnsubscribe();
+  
+  if (!activeFamilyId) return;
+  
+  eventsUnsubscribe = dbFirestore.collection("events")
+    .where("familyId", "==", activeFamilyId)
+    .onSnapshot(snap => {
+      events = [];
+      snap.forEach(doc => {
+        events.push({ id: doc.id, ...doc.data() });
+      });
+      renderCalendar();
+    }, err => {
+      console.error("Events sync failed:", err);
+    });
+    
+  membersUnsubscribe = dbFirestore.collection("users")
+    .where("families", "arrayContains", activeFamilyId)
+    .onSnapshot(snap => {
+      familyMembers = [];
+      snap.forEach(doc => {
+        familyMembers.push({ id: doc.id, ...doc.data() });
+      });
+      
+      const newMemberIds = familyMembers.map(m => m.id);
+      if (!activeFilters || activeFilters.length === 0) {
+        activeFilters = newMemberIds;
+      } else {
+        activeFilters = activeFilters.filter(id => newMemberIds.includes(id));
+        if (activeFilters.length === 0) activeFilters = newMemberIds;
+      }
+      
+      updateFilterBarMarkup();
+      renderFamilyHub();
+      renderCalendar();
+    }, err => {
+      console.error("Members sync failed:", err);
+    });
+}
 
 // Toast notification helper
 function showToast(message, type = 'success') {
@@ -254,102 +267,24 @@ function showScreen(screen) {
   }
 }
 
-// Fetch API wrapper with auth token injector and local fallback
-async function apiFetch(url, options = {}) {
-  // Inject headers first so they are available to both handleLocalRoute and real fetch
-  options.headers = options.headers || {};
-  options.headers['Content-Type'] = 'application/json';
-  
-  if (token) {
-    options.headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  try {
-    if (isLocalMode) {
-      return await handleLocalRoute(url, options);
-    }
-    
-    const res = await fetch(url, options);
-    
-    // Check if session token expired
-    if (res.status === 401) {
-      handleTokenExpired();
-      throw new Error('Session expired');
-    }
-    
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Something went wrong');
-    }
-    return data;
-  } catch (err) {
-    if (err.message !== 'Session expired') {
-      showToast(err.message, 'error');
-    }
-    throw err;
-  }
-}
-
-function handleTokenExpired() {
-  token = null;
-  localStorage.removeItem('kinship_token');
-  currentUser = null;
-  currentFamily = null;
-  familyMembers = [];
-  showToast('Session expired. Please log in again.', 'error');
-  showScreen('auth');
-}
-
-// Check current session validation
-async function checkAuth() {
-  try {
-    const data = await apiFetch('/api/auth/me');
-    currentUser = data.user;
-    currentFamily = data.family;
-    
-    initApp();
-  } catch (err) {
-    showScreen('auth');
-  }
-}
-
 // Initialise application layout once authenticated
 async function initApp() {
   showScreen('app');
   updateHeaderAndProfile();
-  
-  if (currentFamily) {
-    await loadFamilyMembers();
-    await loadEvents();
-  } else {
-    // Clear old family state to prevent profile leakage from previous sessions
-    familyMembers = [];
-    activeFilters = [];
-    document.getElementById('calendar-filter-options').innerHTML = '';
-    
-    showToast('Please create or join a family group to start.', 'info');
-    navigateTo('family');
-  }
 }
 
 function updateHeaderAndProfile() {
-  const familyNameSpan = document.getElementById('header-family-name');
-  if (currentFamily) {
-    familyNameSpan.innerText = currentFamily.name;
-    document.getElementById('header-family-badge').style.display = 'block';
-  } else {
-    document.getElementById('header-family-badge').style.display = 'none';
-  }
+  if (!currentUser || !userProfile) return;
   
-  const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  const initials = userProfile.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   const avatar = document.getElementById('header-avatar');
   avatar.innerText = initials;
-  avatar.style.backgroundColor = currentUser.color;
+  avatar.style.backgroundColor = userProfile.color;
   
   document.getElementById('settings-avatar').innerText = initials;
-  document.getElementById('settings-avatar').style.backgroundColor = currentUser.color;
-  document.getElementById('settings-user-name').innerText = currentUser.name;
-  document.getElementById('settings-username-handle').innerText = `@${currentUser.username}`;
+  document.getElementById('settings-avatar').style.backgroundColor = userProfile.color;
+  document.getElementById('settings-user-name').innerText = userProfile.name;
+  document.getElementById('settings-username-handle').innerText = `@${userProfile.username}`;
   document.getElementById('settings-family-name').innerText = currentFamily ? currentFamily.name : 'No Family Group';
 }
 
@@ -386,27 +321,24 @@ function toggleFamilyInput(mode) {
   }
 }
 
-// Auth actions handlers
+// Auth actions handlers using Firebase Auth
 async function handleLogin(e) {
   e.preventDefault();
-  const username = document.getElementById('login-username').value;
+  const email = document.getElementById('login-email').value;
   const password = document.getElementById('login-password').value;
   
+  const submitButton = document.querySelector('#login-form button');
+  submitButton.innerText = 'Logging In...';
+  submitButton.disabled = true;
+  
   try {
-    const data = await apiFetch('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ username, password })
-    });
-    
-    token = data.token;
-    localStorage.setItem('kinship_token', token);
-    currentUser = data.user;
-    currentFamily = data.family;
-    
+    await auth.signInWithEmailAndPassword(email, password);
     showToast('Logged in successfully!');
-    initApp();
   } catch (err) {
-    // API fetch handles error toast
+    showToast(err.message, 'error');
+  } finally {
+    submitButton.innerHTML = '<span>Log In</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+    submitButton.disabled = false;
   }
 }
 
@@ -414,60 +346,135 @@ async function handleRegister(e) {
   e.preventDefault();
   const name = document.getElementById('register-name').value;
   const email = document.getElementById('register-email').value;
-  const username = document.getElementById('register-username').value;
+  const username = document.getElementById('register-username').value.trim().toLowerCase();
   const password = document.getElementById('register-password').value;
   const color = document.querySelector('input[name="user-color"]:checked').value;
   const familyMode = document.querySelector('input[name="family-mode"]:checked').value;
   
+  const submitButton = document.querySelector('#register-form button');
+  submitButton.innerText = 'Registering...';
+  submitButton.disabled = true;
+  
   try {
-    const data = await apiFetch('/api/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ username, password, name, color, email })
-    });
+    const uSnap = await dbFirestore.collection("users").where("username", "==", username).get();
+    if (!uSnap.empty) {
+      throw new Error("Username already taken. Please choose another one.");
+    }
     
-    token = data.token;
-    localStorage.setItem('kinship_token', token);
-    currentUser = data.user;
+    const credential = await auth.createUserWithEmailAndPassword(email, password);
+    const user = credential.user;
+    
+    const userProfileData = {
+      name,
+      email,
+      username,
+      color,
+      families: []
+    };
+    
+    let createdFamilyId = null;
     
     if (familyMode === 'create') {
       const familyName = document.getElementById('family-name-input').value;
-      const familyData = await apiFetch('/api/family/create', {
-        method: 'POST',
-        body: JSON.stringify({ name: familyName })
+      const inviteCode = 'FAM-' + generateUUID().substring(0, 6).toUpperCase();
+      
+      const newFamilyRef = dbFirestore.collection("families").doc();
+      createdFamilyId = newFamilyRef.id;
+      
+      await newFamilyRef.set({
+        name: familyName,
+        inviteCode: inviteCode,
+        members: [user.uid]
       });
-      currentFamily = familyData.family;
-      currentUser = familyData.user;
+      
+      userProfileData.families.push(createdFamilyId);
     } else {
-      const inviteCode = document.getElementById('family-code-input').value;
-      const familyData = await apiFetch('/api/family/join', {
-        method: 'POST',
-        body: JSON.stringify({ inviteCode })
-      });
-      currentFamily = familyData.family;
-      currentUser = familyData.user;
+      const inviteCode = document.getElementById('family-code-input').value.trim().toUpperCase();
+      const fSnap = await dbFirestore.collection("families").where("inviteCode", "==", inviteCode).get();
+      if (fSnap.empty) {
+        throw new Error("Invalid invitation code. Profile created, please join via Family Hub.");
+      }
+      
+      const familyDoc = fSnap.docs[0];
+      const familyId = familyDoc.id;
+      const familyData = familyDoc.data();
+      
+      const updatedMembers = [...(familyData.members || []), user.uid];
+      await dbFirestore.collection("families").doc(familyId).update({ members: updatedMembers });
+      
+      userProfileData.families.push(familyId);
     }
     
-    showToast('Account created successfully!');
-    initApp();
+    await dbFirestore.collection("users").doc(user.uid).set(userProfileData);
+    showToast('Account registered successfully!');
+    
   } catch (err) {
-    // error handled by fetch
+    showToast(err.message, 'error');
+  } finally {
+    submitButton.innerHTML = '<span>Create Account</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+    submitButton.disabled = false;
   }
 }
 
 async function handleLogout() {
   try {
-    await apiFetch('/api/auth/logout', { method: 'POST' });
-  } catch(e) {}
+    await auth.signOut();
+    showToast('Logged out.');
+  } catch (err) {
+    showToast('Failed to log out: ' + err.message, 'error');
+  }
+}
+
+async function handleGoogleSignIn() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    await auth.signInWithPopup(provider);
+    showToast('Signing in with Google...');
+  } catch (err) {
+    console.error("Google sign in failed:", err);
+    showToast(err.message, 'error');
+  }
+}
+
+async function submitGoogleOnboarding(e) {
+  e.preventDefault();
+  if (!currentUser) {
+    showToast('No user signed in.', 'error');
+    return;
+  }
   
-  token = null;
-  localStorage.removeItem('kinship_token');
-  currentUser = null;
-  currentFamily = null;
-  familyMembers = [];
-  events = [];
+  const username = document.getElementById('onboarding-username').value.trim().toLowerCase();
+  const color = document.querySelector('input[name="onboarding-color"]:checked').value;
+  const name = currentUser.displayName || username;
+  const email = currentUser.email;
   
-  showScreen('auth');
-  showToast('Logged out.');
+  const submitButton = document.querySelector('#google-onboarding-form button[type="submit"]');
+  submitButton.innerText = 'Finishing Setup...';
+  submitButton.disabled = true;
+  
+  try {
+    // Check if username is already taken
+    const uSnap = await dbFirestore.collection("users").where("username", "==", username).get();
+    if (!uSnap.empty) {
+      throw new Error("Username already taken. Please choose another.");
+    }
+    
+    const userProfileData = {
+      name,
+      email,
+      username,
+      color,
+      families: []
+    };
+    
+    await dbFirestore.collection("users").doc(currentUser.uid).set(userProfileData);
+    showToast('Profile completed successfully!');
+  } catch (err) {
+    showToast(err.message, 'error');
+  } finally {
+    submitButton.innerText = 'Finish Setup';
+    submitButton.disabled = false;
+  }
 }
 
 // ================= PASSWORD RESET FLOW =================
@@ -486,67 +493,27 @@ function closeForgotPassword() {
 
 async function handleForgotPasswordVerify(e) {
   e.preventDefault();
-  const username = document.getElementById('forgot-username').value;
   const email = document.getElementById('forgot-email').value;
   
   const submitButton = document.querySelector('#forgot-verify-form button');
-  submitButton.innerText = 'Verifying...';
+  submitButton.innerText = 'Sending...';
   submitButton.disabled = true;
   
   try {
-    const data = await apiFetch('/api/auth/verify-reset', {
-      method: 'POST',
-      body: JSON.stringify({ username, email })
-    });
-    
-    // Switch forms
-    document.getElementById('forgot-verify-form').style.display = 'none';
-    document.getElementById('forgot-reset-form').style.display = 'block';
-    document.getElementById('forgot-reset-form').reset();
-    document.getElementById('forgot-reset-userId').value = data.userId;
+    await auth.sendPasswordResetEmail(email);
+    showToast("Password reset link sent to your email!");
+    closeForgotPassword();
   } catch (err) {
-    // apiFetch already toasts the error
+    showToast(err.message, "error");
   } finally {
     submitButton.innerText = 'Verify Identity';
     submitButton.disabled = false;
   }
 }
 
+// Reset form is skipped since Firebase handles email reset natively
 async function handleForgotPasswordReset(e) {
   e.preventDefault();
-  const userId = document.getElementById('forgot-reset-userId').value;
-  const newPassword = document.getElementById('forgot-new-password').value;
-  const confirmPassword = document.getElementById('forgot-confirm-password').value;
-  
-  if (newPassword !== confirmPassword) {
-    showToast("Passwords do not match.", "error");
-    return;
-  }
-  
-  const submitButton = document.querySelector('#forgot-reset-form button');
-  submitButton.innerText = 'Updating...';
-  submitButton.disabled = true;
-  
-  try {
-    const data = await apiFetch('/api/auth/reset-password', {
-      method: 'POST',
-      body: JSON.stringify({ userId, newPassword })
-    });
-    
-    token = data.token;
-    localStorage.setItem('kinship_token', token);
-    currentUser = data.user;
-    currentFamily = data.family;
-    
-    closeForgotPassword();
-    showToast('Password updated and logged in successfully!');
-    initApp();
-  } catch (err) {
-    // apiFetch handles toast
-  } finally {
-    submitButton.innerText = 'Update Password';
-    submitButton.disabled = false;
-  }
 }
 
 // ================= ROUTING & VIEW CONTROLLER =================
@@ -574,16 +541,6 @@ function navigateTo(view) {
 }
 
 // ================= FAMILY HUB MANAGEMENT =================
-
-async function loadFamilyMembers() {
-  const data = await apiFetch('/api/family/members');
-  familyMembers = data.members;
-  
-  const newMemberIds = familyMembers.map(m => m.id);
-  activeFilters = newMemberIds;
-  
-  updateFilterBarMarkup();
-}
 
 function updateFilterBarMarkup() {
   const container = document.getElementById('calendar-filter-options');
@@ -644,7 +601,7 @@ function renderFamilyHub() {
     div.className = 'member-item';
     div.style.setProperty('--member-color', m.color);
     
-    const isMe = m.id === currentUser.id;
+    const isMe = currentUser && m.id === currentUser.uid;
     
     div.innerHTML = `
       <div class="member-info-col">
@@ -670,25 +627,54 @@ async function handleAddFamilyMember(e) {
   e.preventDefault();
   const name = document.getElementById('new-member-name').value;
   const email = document.getElementById('new-member-email').value;
-  const username = document.getElementById('new-member-username').value;
+  const username = document.getElementById('new-member-username').value.trim().toLowerCase();
   const password = document.getElementById('new-member-password').value;
   const color = document.querySelector('input[name="new-user-color"]:checked').value;
   
+  const submitButton = document.querySelector('#add-member-form button');
+  submitButton.innerText = 'Creating Account...';
+  submitButton.disabled = true;
+  
+  let secondaryApp = null;
   try {
-    await apiFetch('/api/family/add-member', {
-      method: 'POST',
-      body: JSON.stringify({ name, username, password, color, email })
+    const uSnap = await dbFirestore.collection("users").where("username", "==", username).get();
+    if (!uSnap.empty) {
+      throw new Error("Username already taken. Please choose another.");
+    }
+    
+    const secondaryAppName = "temp_" + generateUUID().substring(0, 8);
+    secondaryApp = firebase.initializeApp(firebaseConfig, secondaryAppName);
+    const secondaryAuth = secondaryApp.auth();
+    
+    const credential = await secondaryAuth.createUserWithEmailAndPassword(email, password);
+    const newUid = credential.user.uid;
+    
+    await secondaryAuth.signOut();
+    
+    await dbFirestore.collection("users").doc(newUid).set({
+      name,
+      email,
+      username,
+      color,
+      families: [activeFamilyId]
     });
     
-    showToast(`${name} added to family!`);
+    const updatedMembers = [...(currentFamily.members || []), newUid];
+    await dbFirestore.collection("families").doc(activeFamilyId).update({ members: updatedMembers });
     
+    showToast(`${name} added to family!`);
     document.getElementById('add-member-form').reset();
     
-    await loadFamilyMembers();
-    renderFamilyHub();
-    renderCalendar();
   } catch (err) {
-    // API wrapper handles error message
+    showToast(err.message, 'error');
+  } finally {
+    if (secondaryApp) {
+      try {
+        await secondaryApp.delete();
+      } catch (e) {}
+    }
+    submitButton.innerText = 'Add Member Account';
+    submitButton.disabled = false;
   }
 }
 
@@ -1033,7 +1019,7 @@ function openEventModal(eventToEdit = null) {
     if (eventToEdit) {
       isChecked = Array.isArray(eventToEdit.relevantTo) && eventToEdit.relevantTo.includes(member.id);
     } else {
-      isChecked = member.id === currentUser.id;
+      isChecked = currentUser && member.id === currentUser.uid;
     }
     
     wrapper.innerHTML = `
@@ -1096,6 +1082,8 @@ async function handleEventSubmit(e) {
   }
   
   const eventPayload = {
+    familyId: activeFamilyId,
+    createdBy: currentUser.uid,
     title,
     description,
     date,
@@ -1105,25 +1093,24 @@ async function handleEventSubmit(e) {
     relevantTo
   };
   
+  const submitButton = document.querySelector('#event-form button[type="submit"]');
+  submitButton.innerText = 'Saving...';
+  submitButton.disabled = true;
+  
   try {
     if (id) {
-      await apiFetch(`/api/events/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(eventPayload)
-      });
+      await dbFirestore.collection("events").doc(id).update(eventPayload);
       showToast('Event updated successfully!');
     } else {
-      await apiFetch('/api/events', {
-        method: 'POST',
-        body: JSON.stringify(eventPayload)
-      });
+      await dbFirestore.collection("events").add(eventPayload);
       showToast('Event scheduled!');
     }
-    
     closeEventModal();
-    await loadEvents();
   } catch (err) {
-    // handled
+    showToast(err.message, 'error');
+  } finally {
+    submitButton.innerText = 'Save Event';
+    submitButton.disabled = false;
   }
 }
 
@@ -1134,12 +1121,11 @@ async function handleDeleteEvent() {
   if (!confirm('Are you sure you want to delete this event?')) return;
   
   try {
-    await apiFetch(`/api/events/${id}`, { method: 'DELETE' });
+    await dbFirestore.collection("events").doc(id).delete();
     showToast('Event deleted.');
     closeEventModal();
-    await loadEvents();
   } catch (err) {
-    // handled
+    showToast(err.message, 'error');
   }
 }
 
@@ -1223,38 +1209,73 @@ function editEventFromDetails() {
 async function handleCreateFamilyFromHub(e) {
   e.preventDefault();
   const name = document.getElementById('hub-create-name').value;
+  
   try {
-    const data = await apiFetch('/api/family/create', {
-      method: 'POST',
-      body: JSON.stringify({ name })
-    });
-    currentFamily = data.family;
-    currentUser = data.user;
-    showToast('Family group created successfully!');
+    const inviteCode = 'FAM-' + generateUUID().substring(0, 6).toUpperCase();
     
-    // Reload and redraw
-    await initApp();
+    // Create family document
+    const familyRef = dbFirestore.collection("families").doc();
+    const familyId = familyRef.id;
+    
+    await familyRef.set({
+      name,
+      inviteCode,
+      members: [currentUser.uid]
+    });
+    
+    // Update user profile
+    const updatedFamilies = [...(userProfile.families || []), familyId];
+    await dbFirestore.collection("users").doc(currentUser.uid).update({ families: updatedFamilies });
+    
+    showToast('New family group created!');
+    
+    // Set as active family
+    activeFamilyId = familyId;
+    localStorage.setItem('kinship_active_family_id', activeFamilyId);
+    
+    document.getElementById('hub-create-name').value = '';
+    
   } catch (err) {
-    // Handled by apiFetch
+    showToast(err.message, 'error');
   }
 }
 
 async function handleJoinFamilyFromHub(e) {
   e.preventDefault();
-  const inviteCode = document.getElementById('hub-join-code').value;
+  const inviteCode = document.getElementById('hub-join-code').value.trim().toUpperCase();
+  
   try {
-    const data = await apiFetch('/api/family/join', {
-      method: 'POST',
-      body: JSON.stringify({ inviteCode })
-    });
-    currentFamily = data.family;
-    currentUser = data.user;
-    showToast('Joined family group successfully!');
+    const fSnap = await dbFirestore.collection("families").where("inviteCode", "==", inviteCode).get();
+    if (fSnap.empty) {
+      throw new Error("Invalid invite code.");
+    }
     
-    // Reload and redraw
-    await initApp();
+    const familyDoc = fSnap.docs[0];
+    const familyId = familyDoc.id;
+    const familyData = familyDoc.data();
+    
+    if (familyData.members && familyData.members.includes(currentUser.uid)) {
+      throw new Error("You are already a member of this family group.");
+    }
+    
+    // Update family members
+    const updatedMembers = [...(familyData.members || []), currentUser.uid];
+    await dbFirestore.collection("families").doc(familyId).update({ members: updatedMembers });
+    
+    // Update user profile
+    const updatedFamilies = [...(userProfile.families || []), familyId];
+    await dbFirestore.collection("users").doc(currentUser.uid).update({ families: updatedFamilies });
+    
+    showToast('Successfully joined the group!');
+    
+    // Set as active family
+    activeFamilyId = familyId;
+    localStorage.setItem('kinship_active_family_id', activeFamilyId);
+    
+    document.getElementById('hub-join-code').value = '';
+    
   } catch (err) {
-    // Handled by apiFetch
+    showToast(err.message, 'error');
   }
 }
 
@@ -1275,492 +1296,10 @@ function escapeHtml(unsafe) {
     .replace(/'/g, "&#039;");
 }
 
-// ==========================================================
-// ============ STANDALONE LOCAL STORAGE DATABASE ============
-// ==========================================================
-
-// Helper client-side password hashing (SHA-256)
-async function clientHashPassword(password, salt) {
-  const message = password + salt;
-  
-  if (window.crypto && window.crypto.subtle) {
-    try {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(message);
-      const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    } catch (e) {
-      console.warn("crypto.subtle failed, falling back to pure JS hashing", e);
-    }
-  }
-  
-  return sha256Pure(message);
-}
-
-// Pure JavaScript SHA-256 Implementation (works under file:// protocol)
-function sha256Pure(ascii) {
-  function rightRotate(value, amount) {
-    return (value >>> amount) | (value << (32 - amount));
-  }
-  
-  const mathPow = Math.pow;
-  const maxWord = mathPow(2, 32);
-  let result = '';
-
-  const words = [];
-  const asciiLength = ascii.length;
-  
-  const hash = [];
-  const k = [];
-  let primeCounter = 0;
-
-  const isComposite = {};
-  for (let candidate = 2; primeCounter < 64; candidate++) {
-    if (!isComposite[candidate]) {
-      for (let i = 0; i < 313; i += candidate) {
-        isComposite[i] = 1;
-      }
-      hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
-      k[primeCounter++] = (mathPow(candidate, 1 / 3) * maxWord) | 0;
-    }
-  }
-  
-  ascii += '\x80';
-  while (ascii.length % 64 - 56) ascii += '\x00';
-  for (let i = 0; i < ascii.length; i++) {
-    const j = ascii.charCodeAt(i);
-    if (j >> 8) return ''; // ASCII only
-    words[i >> 2] |= j << (24 - (i % 4) * 8);
-  }
-  words[words.length] = ((asciiLength * 8) / maxWord) | 0;
-  words[words.length] = (asciiLength * 8);
-  
-  for (let j = 0; j < words.length; j += 16) {
-    const w = words.slice(j, j + 16);
-    const oldHash = [...hash];
-    
-    for (let i = 0; i < 64; i++) {
-      let wItem = w[i];
-      if (i >= 16) {
-        const s0 = rightRotate(w[i - 15], 7) ^ rightRotate(w[i - 15], 18) ^ (w[i - 15] >>> 3);
-        const s1 = rightRotate(w[i - 2], 17) ^ rightRotate(w[i - 2], 19) ^ (w[i - 2] >>> 10);
-        wItem = w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
-      }
-      
-      const ch = (hash[4] & hash[5]) ^ (~hash[4] & hash[6]);
-      const _maj = (hash[0] & hash[1]) ^ (hash[0] & hash[2]) ^ (hash[1] & hash[2]);
-      const sigma0 = rightRotate(hash[0], 2) ^ rightRotate(hash[0], 13) ^ rightRotate(hash[0], 22);
-      const sigma1 = rightRotate(hash[4], 6) ^ rightRotate(hash[4], 11) ^ rightRotate(hash[4], 25);
-      
-      const temp1 = (hash[7] + sigma1 + ch + k[i] + wItem) | 0;
-      const temp2 = (sigma0 + _maj) | 0;
-      
-      hash.unshift((temp1 + temp2) | 0);
-      hash[4] = (hash[4] + temp1) | 0;
-      hash.length = 8;
-    }
-    
-    for (let i = 0; i < 8; i++) {
-      hash[i] = (hash[i] + oldHash[i]) | 0;
-    }
-  }
-  
-  for (let i = 0; i < 8; i++) {
-    const val = hash[i] >>> 0;
-    result += val.toString(16).padStart(8, '0');
-  }
-  
-  return result;
-}
-
-// Mock backend Router for when running as local file
-async function handleLocalRoute(url, options) {
-  // Delay slightly to simulate server request latency
-  await new Promise(r => setTimeout(r, 150));
-  
-  // Ensure we have a passphrase
-  const passphrase = localStorage.getItem('kinship_sync_passphrase');
-  if (!passphrase) {
-    promptForPassphrase();
-    throw new Error("Please enter your family passphrase to sync with Firebase.");
-  }
-  
-  // Ensure the database is loaded from Firebase
-  if (!dbInMemory) {
-    try {
-      await loadDatabaseFromCloud();
-    } catch (e) {
-      throw new Error("Failed to load database from Firebase: " + e.message);
-    }
-  }
-  
-  let db = dbInMemory;
-  
-  // Helper to save database updates dynamically in the background to Firebase
-  const saveDb = () => {
-    dbInMemory = db;
-    saveDatabaseToCloud().catch(err => {
-      showToast("Cloud sync failed. Check internet connection.", "error");
-      console.error(err);
-    });
-  };
-  
-  // Parse session user
-  let sessionUser = null;
-  const authHeader = options.headers ? options.headers['Authorization'] : '';
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const sToken = authHeader.substring(7);
-    const session = db.sessions[sToken];
-    if (session) {
-      sessionUser = db.users.find(u => u.id === session.userId);
-    }
-  }
-  
-  const body = options.body ? JSON.parse(options.body) : {};
-
-  // Router matching
-  if (url === '/api/auth/me') {
-    if (!sessionUser) throw new Error('Unauthorized');
-    const { passwordHash, salt, ...safeUser } = sessionUser;
-    const family = sessionUser.familyId ? db.families.find(f => f.id === sessionUser.familyId) : null;
-    return { user: safeUser, family };
-    
-  } else if (url === '/api/auth/register') {
-    const { username, password, name, color, email } = body;
-    if (db.users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
-      throw new Error('Username already taken.');
-    }
-    const uSalt = generateUUID().substring(0, 8);
-    const uHash = await clientHashPassword(password, uSalt);
-    const newUser = {
-      id: 'usr_' + generateUUID(),
-      username,
-      email: email || '',
-      passwordHash: uHash,
-      salt: uSalt,
-      name,
-      color,
-      familyId: null
-    };
-    db.users.push(newUser);
-    
-    // Login automatically
-    const tokenVal = 'tok_' + generateUUID();
-    db.sessions[tokenVal] = { userId: newUser.id };
-    saveDb();
-    
-    const { passwordHash: h, salt: s, ...safeUser } = newUser;
-    return { token: tokenVal, user: safeUser };
-    
-  } else if (url === '/api/auth/login') {
-    const { username, password } = body;
-    const user = db.users.find(u => u.username.toLowerCase() === username.toLowerCase());
-    if (!user) throw new Error('Invalid username or password.');
-    
-    const hash = await clientHashPassword(password, user.salt);
-    if (user.passwordHash !== hash) throw new Error('Invalid username or password.');
-    
-    const tokenVal = 'tok_' + generateUUID();
-    db.sessions[tokenVal] = { userId: user.id };
-    saveDb();
-    
-    const { passwordHash: h, salt: s, ...safeUser } = user;
-    const family = user.familyId ? db.families.find(f => f.id === user.familyId) : null;
-    return { token: tokenVal, user: safeUser, family };
-    
-  } else if (url === '/api/auth/verify-reset') {
-    const { username, email } = body;
-    const user = db.users.find(u => u.username.toLowerCase() === username.toLowerCase().trim() && 
-                                    u.email && u.email.toLowerCase() === email.toLowerCase().trim());
-    if (!user) {
-      throw new Error('Identity verification failed. Username and Email do not match.');
-    }
-    return { success: true, userId: user.id };
-    
-  } else if (url === '/api/auth/reset-password') {
-    const { userId, newPassword } = body;
-    const user = db.users.find(u => u.id === userId);
-    if (!user) {
-      throw new Error('User not found.');
-    }
-    const hash = await clientHashPassword(newPassword, user.salt);
-    user.passwordHash = hash;
-    
-    const tokenVal = 'tok_' + generateUUID();
-    db.sessions[tokenVal] = { userId: user.id };
-    saveDb();
-    
-    const { passwordHash: h, salt: s, ...safeUser } = user;
-    const family = user.familyId ? db.families.find(f => f.id === user.familyId) : null;
-    return { token: tokenVal, user: safeUser, family };
-    
-  } else if (url === '/api/auth/logout') {
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const sToken = authHeader.substring(7);
-      delete db.sessions[sToken];
-      saveDb();
-    }
-    return { success: true };
-    
-  } else if (url === '/api/family/create') {
-    if (!sessionUser) throw new Error('Unauthorized');
-    const { name } = body;
-    const familyCode = 'FAM-' + generateUUID().substring(0, 6).toUpperCase();
-    const newFamily = {
-      id: 'fam_' + generateUUID(),
-      name,
-      inviteCode: familyCode
-    };
-    db.families.push(newFamily);
-    
-    // Join family
-    sessionUser.familyId = newFamily.id;
-    saveDb();
-    
-    const { passwordHash: h, salt: s, ...safeUser } = sessionUser;
-    return { family: newFamily, user: safeUser };
-    
-  } else if (url === '/api/family/join') {
-    if (!sessionUser) throw new Error('Unauthorized');
-    const { inviteCode } = body;
-    const family = db.families.find(f => f.inviteCode.toUpperCase() === inviteCode.toUpperCase().trim());
-    if (!family) throw new Error('Invalid invite code.');
-    
-    sessionUser.familyId = family.id;
-    saveDb();
-    
-    const { passwordHash: h, salt: s, ...safeUser } = sessionUser;
-    return { family, user: safeUser };
-    
-  } else if (url === '/api/family/members') {
-    if (!sessionUser || !sessionUser.familyId) return { members: [] };
-    const members = db.users
-      .filter(u => u.familyId === sessionUser.familyId)
-      .map(({ passwordHash, salt, username, ...safeUser }) => safeUser);
-    return { members };
-    
-  } else if (url === '/api/family/add-member') {
-    if (!sessionUser || !sessionUser.familyId) throw new Error('You must belong to a family.');
-    const { username, password, name, color, email } = body;
-    if (db.users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
-      throw new Error('Username already taken.');
-    }
-    const uSalt = generateUUID().substring(0, 8);
-    const uHash = await clientHashPassword(password, uSalt);
-    const newUser = {
-      id: 'usr_' + generateUUID(),
-      username,
-      email: email || '',
-      passwordHash: uHash,
-      salt: uSalt,
-      name,
-      color,
-      familyId: sessionUser.familyId
-    };
-    db.users.push(newUser);
-    saveDb();
-    
-    const { passwordHash: h, salt: s, ...safeUser } = newUser;
-    return { user: safeUser };
-    
-  } else if (url === '/api/events') {
-    if (!sessionUser || !sessionUser.familyId) return { events: [] };
-    
-    if (options.method === 'POST') {
-      const { title, description, date, startTime, endTime, category, relevantTo } = body;
-      const newEvent = {
-        id: 'evt_' + generateUUID(),
-        familyId: sessionUser.familyId,
-        createdBy: sessionUser.id,
-        title,
-        description,
-        date,
-        startTime,
-        endTime,
-        category,
-        relevantTo: Array.isArray(relevantTo) ? relevantTo : [sessionUser.id]
-      };
-      db.events.push(newEvent);
-      saveDb();
-      return { event: newEvent };
-    }
-    
-    // GET request logic: visibility checks
-    const fEvents = db.events.filter(e => e.familyId === sessionUser.familyId);
-    const visibleEvents = fEvents.filter(e => {
-      const isCreator = e.createdBy === sessionUser.id;
-      const isRelevant = Array.isArray(e.relevantTo) && e.relevantTo.includes(sessionUser.id);
-      return isCreator || isRelevant;
-    });
-    return { events: visibleEvents };
-    
-  } else if (url.startsWith('/api/events/')) {
-    if (!sessionUser) throw new Error('Unauthorized');
-    const eventId = url.substring('/api/events/'.length);
-    const index = db.events.findIndex(e => e.id === eventId && e.familyId === sessionUser.familyId);
-    
-    if (index === -1) throw new Error('Event not found');
-    
-    if (options.method === 'DELETE') {
-      db.events.splice(index, 1);
-      saveDb();
-      return { success: true };
-    } else if (options.method === 'PUT') {
-      const { title, description, date, startTime, endTime, category, relevantTo } = body;
-      const existing = db.events[index];
-      db.events[index] = {
-        ...existing,
-        title: title !== undefined ? title : existing.title,
-        description: description !== undefined ? description : existing.description,
-        date: date !== undefined ? date : existing.date,
-        startTime: startTime !== undefined ? startTime : existing.startTime,
-        endTime: endTime !== undefined ? endTime : existing.endTime,
-        category: category !== undefined ? category : existing.category,
-        relevantTo: relevantTo !== undefined ? relevantTo : existing.relevantTo
-      };
-      saveDb();
-      return { event: db.events[index] };
-    }
-  }
-  
-  throw new Error('Not Found');
-}
-
 // Generate simple mock UUIDs client side
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
-}
-
-// Generates seed data for local storage sandbox on first load
-function getSeedDatabase() {
-  const seedDb = {
-    users: [
-      {
-        id: 'usr_sarah',
-        username: 'sarah',
-        email: 'sarah@adams.com',
-        passwordHash: '3698271d39176bca27b41e28f3eb805984fefc677f474c92b9a64a42a3e26696', // hash of password123 with salt 'salt_sarah'
-        salt: 'salt_sarah',
-        name: 'Sarah (Mom)',
-        familyId: 'fam_adams',
-        color: '#ec4899'
-      },
-      {
-        id: 'usr_john',
-        username: 'john',
-        email: 'john@adams.com',
-        passwordHash: '688b4e1dca656b1a54bbb648d37bc8efb516915f8d975316f67ad1a9b63c73db', // hash of password123 with salt 'salt_john'
-        salt: 'salt_john',
-        name: 'John (Dad)',
-        familyId: 'fam_adams',
-        color: '#3b82f6'
-      },
-      {
-        id: 'usr_leo',
-        username: 'leo',
-        email: 'leo@adams.com',
-        passwordHash: '1d8070db727094cebc36a22e86f963a3e01df2e223c502f84295a2b4455f55b8', // hash of password123 with salt 'salt_leo'
-        salt: 'salt_leo',
-        name: 'Leo (Son)',
-        familyId: 'fam_adams',
-        color: '#10b981'
-      },
-      {
-        id: 'usr_maya',
-        username: 'maya',
-        email: 'maya@adams.com',
-        passwordHash: 'dc0519c2bdbf1f11ec2f4a7f343fb3a9580f48757d6515f9a33c582ffc330a09', // hash of password123 with salt 'salt_maya'
-        salt: 'salt_maya',
-        name: 'Maya (Daughter)',
-        familyId: 'fam_adams',
-        color: '#f59e0b'
-      }
-    ],
-    families: [
-      {
-        id: 'fam_adams',
-        name: 'Adams Family',
-        inviteCode: 'ADAMS123'
-      }
-    ],
-    events: [],
-    sessions: {}
-  };
-  
-  // Seed dates relative to today
-  const today = new Date();
-  const formatOffsetDate = (offsetDays) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() + offsetDays);
-    return d.toISOString().split('T')[0];
-  };
-  
-  seedDb.events = [
-    {
-      id: 'evt_1',
-      familyId: 'fam_adams',
-      createdBy: 'usr_sarah',
-      title: 'Weekly Family Dinner 🍽️',
-      description: 'Sunday night dinner. Everyone must attend!',
-      date: formatOffsetDate(-today.getDay()),
-      startTime: '18:30',
-      endTime: '20:30',
-      category: 'fun',
-      relevantTo: ['usr_sarah', 'usr_john', 'usr_leo', 'usr_maya']
-    },
-    {
-      id: 'evt_2',
-      familyId: 'fam_adams',
-      createdBy: 'usr_leo',
-      title: 'Soccer Practice ⚽',
-      description: 'Leo practice session. Dad to drive him.',
-      date: formatOffsetDate(2 - today.getDay()),
-      startTime: '16:00',
-      endTime: '17:30',
-      category: 'school',
-      relevantTo: ['usr_leo', 'usr_john', 'usr_sarah']
-    },
-    {
-      id: 'evt_3',
-      familyId: 'fam_adams',
-      createdBy: 'usr_john',
-      title: 'Dentist Appointment 🦷',
-      description: 'Routine checkup for Dad.',
-      date: formatOffsetDate(3 - today.getDay()),
-      startTime: '09:00',
-      endTime: '10:00',
-      category: 'appointment',
-      relevantTo: ['usr_john']
-    },
-    {
-      id: 'evt_4',
-      familyId: 'fam_adams',
-      createdBy: 'usr_sarah',
-      title: 'Piano Lesson 🎹',
-      description: 'Maya piano practice. Mom driving.',
-      date: formatOffsetDate(4 - today.getDay()),
-      startTime: '15:00',
-      endTime: '16:00',
-      category: 'school',
-      relevantTo: ['usr_maya', 'usr_sarah']
-    },
-    {
-      id: 'evt_5',
-      familyId: 'fam_adams',
-      createdBy: 'usr_sarah',
-      title: 'Date Night ❤️',
-      description: 'Dinner date at the Italian restaurant.',
-      date: formatOffsetDate(5 - today.getDay()),
-      startTime: '20:00',
-      endTime: '22:30',
-      category: 'fun',
-      relevantTo: ['usr_sarah', 'usr_john']
-    }
-  ];
-  
-  return seedDb;
 }
