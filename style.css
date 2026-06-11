@@ -1402,11 +1402,20 @@ label {
   font-weight: 600;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   backdrop-filter: blur(12px);
   animation: slideToastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), fadeOut 0.3s ease 2.7s forwards;
   pointer-events: auto;
+  width: 100%;
+}
+
+.toast span {
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .toast.toast-error {
