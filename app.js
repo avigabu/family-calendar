@@ -1,6 +1,6 @@
 // SYNCUP - Client Application State
 let currentUser = null;       // Firebase Auth User object
-let userProfile = null;       // Firestore document data from /users/{uid} (name, email, username, color, families)
+let userProfile = null;       // Firestore document data from /users/{uid} (name, email, color, families)
 let activeFamilyId = null;    // Current selected family/group ID
 let currentFamily = null;     // Firestore document data for active family (name, inviteCode, members)
 let familyMembers = [];       // Array of user profiles belonging to the active family
@@ -95,20 +95,27 @@ document.addEventListener('DOMContentLoaded', () => {
       if (userProfileUnsubscribe) userProfileUnsubscribe();
       userProfileUnsubscribe = dbFirestore.collection("users").doc(user.uid).onSnapshot(async (doc) => {
         if (!doc.exists) {
-          // If this is a Google sign-in user who hasn't completed onboarding yet, show the modal
           const isGoogleUser = user.providerData.some(p => p.providerId === 'google.com');
           if (isGoogleUser) {
-            const onboardingModal = document.getElementById('google-onboarding-modal');
-            if (onboardingModal) onboardingModal.classList.add('active');
+            // Automatically initialize Google user profile (username is removed, email is used)
+            const userProfileData = {
+              name: user.displayName || "Family Member",
+              email: user.email,
+              color: PALETTE_COLORS[0],
+              families: []
+            };
+            try {
+              await dbFirestore.collection("users").doc(user.uid).set(userProfileData);
+              showToast('Google profile initialized!', 'success');
+            } catch (err) {
+              console.error("Failed to initialize Google profile:", err);
+              showToast("Error creating profile: " + err.message, "error");
+            }
           } else {
             console.warn("User profile does not exist for user:", user.uid);
           }
           return;
         }
-        
-        // Profile exists, make sure onboarding modal is closed
-        const onboardingModal = document.getElementById('google-onboarding-modal');
-        if (onboardingModal) onboardingModal.classList.remove('active');
         
         userProfile = doc.data();
         await loadUserFamilies();
@@ -334,7 +341,7 @@ function updateHeaderAndProfile() {
   document.getElementById('settings-avatar').innerText = initials;
   document.getElementById('settings-avatar').style.backgroundColor = userProfile.color;
   document.getElementById('settings-user-name').innerText = userProfile.name;
-  document.getElementById('settings-username-handle').innerText = `@${userProfile.username}`;
+  document.getElementById('settings-username-handle').innerText = userProfile.email;
   document.getElementById('settings-family-name').innerText = currentFamily ? currentFamily.name : 'No Family Group';
 }
 
@@ -396,7 +403,6 @@ async function handleRegister(e) {
   e.preventDefault();
   const name = document.getElementById('register-name').value;
   const email = document.getElementById('register-email').value;
-  const username = document.getElementById('register-username').value.trim().toLowerCase();
   const password = document.getElementById('register-password').value;
   const familyMode = document.querySelector('input[name="family-mode"]:checked').value;
   
@@ -410,18 +416,9 @@ async function handleRegister(e) {
     credential = await auth.createUserWithEmailAndPassword(email, password);
     const user = credential.user;
     
-    // 2. Check if username is already taken (rules allow reading now since user is signed in)
-    const uSnap = await dbFirestore.collection("users").where("username", "==", username).get();
-    if (!uSnap.empty) {
-      // Username is taken! Delete the newly created auth account
-      await user.delete();
-      throw new Error("Username already taken. Please choose another one.");
-    }
-    
     const userProfileData = {
       name,
       email,
-      username,
       color: PALETTE_COLORS[0], // Default placeholder, will be updated if joining
       families: []
     };
@@ -526,46 +523,7 @@ async function handleGoogleSignIn() {
   }
 }
 
-async function submitGoogleOnboarding(e) {
-  e.preventDefault();
-  if (!currentUser) {
-    showToast('No user signed in.', 'error');
-    return;
-  }
-  
-  const username = document.getElementById('onboarding-username').value.trim().toLowerCase();
-  const color = PALETTE_COLORS[0]; // Temporary default, adjusted once they join a family group
-  const name = currentUser.displayName || username;
-  const email = currentUser.email;
-  
-  const submitButton = document.querySelector('#google-onboarding-form button[type="submit"]');
-  submitButton.innerText = 'Finishing Setup...';
-  submitButton.disabled = true;
-  
-  try {
-    // Check if username is already taken
-    const uSnap = await dbFirestore.collection("users").where("username", "==", username).get();
-    if (!uSnap.empty) {
-      throw new Error("Username already taken. Please choose another.");
-    }
-    
-    const userProfileData = {
-      name,
-      email,
-      username,
-      color,
-      families: []
-    };
-    
-    await dbFirestore.collection("users").doc(currentUser.uid).set(userProfileData);
-    showToast('Profile completed successfully!');
-  } catch (err) {
-    showToast(err.message, 'error');
-  } finally {
-    submitButton.innerText = 'Finish Setup';
-    submitButton.disabled = false;
-  }
-}
+
 
 async function handleDeleteAccount() {
   if (!currentUser || !userProfile) return;
@@ -771,7 +729,7 @@ function renderFamilyHub() {
         <div class="member-color-indicator"></div>
         <span class="member-name">${m.name} ${isMe ? '(You)' : ''}</span>
       </div>
-      <div class="member-badge">@${m.username}</div>
+      <div class="member-badge">${m.email}</div>
     `;
     list.appendChild(div);
   });
@@ -790,7 +748,6 @@ async function handleAddFamilyMember(e) {
   e.preventDefault();
   const name = document.getElementById('new-member-name').value;
   const email = document.getElementById('new-member-email').value;
-  const username = document.getElementById('new-member-username').value.trim().toLowerCase();
   const password = document.getElementById('new-member-password').value;
   
   // Auto-assign unique color that is not taken by any active family member
@@ -809,11 +766,6 @@ async function handleAddFamilyMember(e) {
   
   let secondaryApp = null;
   try {
-    const uSnap = await dbFirestore.collection("users").where("username", "==", username).get();
-    if (!uSnap.empty) {
-      throw new Error("Username already taken. Please choose another.");
-    }
-    
     const secondaryAppName = "temp_" + generateUUID().substring(0, 8);
     secondaryApp = firebase.initializeApp(firebaseConfig, secondaryAppName);
     const secondaryAuth = secondaryApp.auth();
@@ -825,7 +777,6 @@ async function handleAddFamilyMember(e) {
     await secondaryDb.collection("users").doc(newUid).set({
       name,
       email,
-      username,
       color,
       families: [activeFamilyId]
     });

@@ -95,10 +95,7 @@
           <label for="register-email">Your Email Address</label>
           <input type="email" id="register-email" placeholder="e.g. sarah@adams.com" required>
         </div>
-        <div class="form-group">
-          <label for="register-username">Choose Username</label>
-          <input type="text" id="register-username" placeholder="e.g. sarah" required autocomplete="username">
-        </div>
+
         <div class="form-group">
           <label for="register-password">Choose Password</label>
           <div class="password-wrapper">
@@ -290,10 +287,7 @@
               <label for="new-member-email">Email Address</label>
               <input type="email" id="new-member-email" placeholder="e.g. leo@adams.com" required>
             </div>
-            <div class="form-group">
-              <label for="new-member-username">Username</label>
-              <input type="text" id="new-member-username" placeholder="e.g. leo" required>
-            </div>
+
             <div class="form-group">
               <label for="new-member-password">Password</label>
               <div class="password-wrapper">
@@ -374,7 +368,7 @@
               <div class="profile-big-avatar" id="settings-avatar" style="background-color: #3b82f6;">S</div>
               <div>
                 <h3 id="settings-user-name">User Name</h3>
-                <p id="settings-username-handle">@username</p>
+                <p id="settings-username-handle">email@example.com</p>
               </div>
             </div>
           </div>
@@ -601,53 +595,12 @@
       
       <!-- Verification Form -->
       <form id="forgot-verify-form" onsubmit="handleForgotPasswordVerify(event)">
-        <p class="field-help-text" style="margin-bottom: 16px;">Enter your username and email to verify your identity.</p>
-        <div class="form-group">
-          <label for="forgot-username">Username</label>
-          <input type="text" id="forgot-username" placeholder="e.g. sarah" required>
-        </div>
+        <p class="field-help-text" style="margin-bottom: 16px;">Enter your email to receive a password reset link.</p>
         <div class="form-group">
           <label for="forgot-email">Email Address</label>
           <input type="email" id="forgot-email" placeholder="e.g. sarah@adams.com" required>
         </div>
-        <button type="submit" class="btn btn-primary btn-block">Verify Identity</button>
-      </form>
-
-      <!-- Reset Password Form (Hidden initially) -->
-      <form id="forgot-reset-form" onsubmit="handleForgotPasswordReset(event)" style="display: none;">
-        <p class="field-help-text" style="margin-bottom: 16px; color: var(--success-color);">Identity verified! Choose a new password below.</p>
-        <input type="hidden" id="forgot-reset-userId">
-        <div class="form-group">
-          <label for="forgot-new-password">New Password</label>
-          <input type="password" id="forgot-new-password" placeholder="Min 6 characters" minlength="6" required>
-        </div>
-        <div class="form-group">
-          <label for="forgot-confirm-password">Confirm Password</label>
-          <input type="password" id="forgot-confirm-password" placeholder="Confirm new password" minlength="6" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">Update Password</button>
-      </form>
-    </div>
-  </div>
-
-  <!-- GOOGLE ONBOARDING MODAL -->
-  <div id="google-onboarding-modal" class="modal-overlay" style="z-index: 9999;">
-    <div class="auth-card" style="margin: auto; max-width: 400px; text-align: center; background: var(--bg-secondary); border: 1px solid var(--border-light);">
-      <div class="auth-header">
-        <div class="logo" style="margin-bottom: 12px;">
-          <h2 style="font-size: 22px; font-weight: 800;">Complete Profile</h2>
-        </div>
-        <p class="auth-subtitle" style="margin-bottom: 20px;">Choose a username and calendar color to complete your registration</p>
-      </div>
-      <form id="google-onboarding-form" onsubmit="submitGoogleOnboarding(event)">
-        <div class="form-group" style="text-align: left; margin-bottom: 18px;">
-          <label for="onboarding-username">Choose Username</label>
-          <input type="text" id="onboarding-username" placeholder="e.g. sarah" required>
-        </div>
-        
-
-        
-        <button type="submit" class="btn btn-primary btn-block">Finish Setup</button>
+        <button type="submit" class="btn btn-primary btn-block">Send Reset Link</button>
       </form>
     </div>
   </div>
