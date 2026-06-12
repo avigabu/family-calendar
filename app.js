@@ -244,17 +244,11 @@ function showToast(message, type = 'success') {
   
   if (type === 'error') {
     toast.innerHTML = `
-      <span style="flex: 1;">${message}</span>
+      <span style="flex: 1; user-select: text;">${message}</span>
       <button class="toast-close-btn" style="background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-weight: 700; font-size: 16px; padding: 0 4px; line-height: 1; transition: color 0.2s;" onmouseover="this.style.color='var(--text-primary)'" onmouseout="this.style.color='var(--text-secondary)'">×</button>
     `;
     const closeBtn = toast.querySelector('.toast-close-btn');
     closeBtn.onclick = () => toast.remove();
-    
-    // Also dismiss when clicking the toast itself (optional but handy)
-    toast.style.cursor = 'pointer';
-    toast.onclick = (e) => {
-      if (e.target !== closeBtn) toast.remove();
-    };
   } else {
     toast.innerHTML = `
       <span>${message}</span>
@@ -546,24 +540,7 @@ async function handleDeleteAccount() {
     const uid = currentUser.uid;
     const joinedFamilies = [...(userProfile.families || [])];
     
-    // 1. Remove user UID from families
-    for (const familyId of joinedFamilies) {
-      const familyRef = dbFirestore.collection("families").doc(familyId);
-      const doc = await familyRef.get();
-      if (doc.exists) {
-        const familyData = doc.data();
-        const updatedMembers = (familyData.members || []).filter(m => m !== uid);
-        
-        if (updatedMembers.length === 0) {
-          // If no members are left in this family group, we can delete the family document
-          await familyRef.delete();
-        } else {
-          await familyRef.update({ members: updatedMembers });
-        }
-      }
-    }
-    
-    // 2. Delete events created by the user, and remove user from relevantTo arrays of other events
+    // 1. Delete events created by the user, and remove user from relevantTo arrays of other events (DO THIS FIRST while user is still in the family)
     if (joinedFamilies.length > 0) {
       const eventsSnap = await dbFirestore.collection("events")
         .where("familyId", "in", joinedFamilies)
@@ -580,6 +557,23 @@ async function handleDeleteAccount() {
         }
       });
       await batch.commit();
+    }
+    
+    // 2. Remove user UID from families (DO THIS SECOND)
+    for (const familyId of joinedFamilies) {
+      const familyRef = dbFirestore.collection("families").doc(familyId);
+      const doc = await familyRef.get();
+      if (doc.exists) {
+        const familyData = doc.data();
+        const updatedMembers = (familyData.members || []).filter(m => m !== uid);
+        
+        if (updatedMembers.length === 0) {
+          // If no members are left in this family group, we can delete the family document
+          await familyRef.delete();
+        } else {
+          await familyRef.update({ members: updatedMembers });
+        }
+      }
     }
     
     // 3. Delete user profile document
