@@ -1,4 +1,4 @@
-// KINSHIP - Client Application State
+// SYNCUP - Client Application State
 let currentUser = null;       // Firebase Auth User object
 let userProfile = null;       // Firestore document data from /users/{uid} (name, email, username, color, families)
 let activeFamilyId = null;    // Current selected family/group ID
@@ -125,12 +125,12 @@ async function loadUserFamilies() {
     });
     
     if (userFamilies.length > 0) {
-      const savedActive = localStorage.getItem('kinship_active_family_id');
+      const savedActive = localStorage.getItem('syncup_active_family_id');
       if (savedActive && userFamilies.some(f => f.id === savedActive)) {
         activeFamilyId = savedActive;
       } else {
         activeFamilyId = userFamilies[0].id;
-        localStorage.setItem('kinship_active_family_id', activeFamilyId);
+        localStorage.setItem('syncup_active_family_id', activeFamilyId);
       }
       currentFamily = userFamilies.find(f => f.id === activeFamilyId);
       
@@ -182,7 +182,7 @@ function updateFamilySwitcherUI() {
 function switchActiveFamily(familyId) {
   if (familyId === activeFamilyId) return;
   activeFamilyId = familyId;
-  localStorage.setItem('kinship_active_family_id', activeFamilyId);
+  localStorage.setItem('syncup_active_family_id', activeFamilyId);
   currentFamily = userFamilies.find(f => f.id === activeFamilyId);
   
   setupActiveFamilyListeners();
@@ -1352,7 +1352,7 @@ async function handleCreateFamilyFromHub(e) {
     
     // Set as active family
     activeFamilyId = familyId;
-    localStorage.setItem('kinship_active_family_id', activeFamilyId);
+    localStorage.setItem('syncup_active_family_id', activeFamilyId);
     
     e.target.reset();
     
@@ -1394,7 +1394,7 @@ async function handleJoinFamilyFromHub(e) {
     
     // Set as active family
     activeFamilyId = familyId;
-    localStorage.setItem('kinship_active_family_id', activeFamilyId);
+    localStorage.setItem('syncup_active_family_id', activeFamilyId);
     
     e.target.reset();
     
