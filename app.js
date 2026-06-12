@@ -13,6 +13,46 @@ let calendarMode = 'month';  // 'month' | 'week'
 let currentDate = new Date(); // Anchor date for calendar grid calculations
 let selectedDay = new Date().toISOString().split('T')[0]; // For daily list in monthly view
 
+// Color palette for automatic member colors
+const PALETTE_COLORS = [
+  '#3b82f6', // Blue
+  '#ec4899', // Pink
+  '#10b981', // Green
+  '#8b5cf6', // Purple
+  '#f59e0b', // Yellow/Orange
+  '#ef4444', // Red
+  '#06b6d4', // Cyan
+  '#f43f5e', // Rose
+  '#84cc16', // Lime
+  '#14b8a6', // Teal
+  '#a855f7', // Light Purple
+  '#f97316'  // Deep Orange
+];
+
+async function getUnusedColorForFamily(familyId, memberUids) {
+  if (!memberUids || memberUids.length === 0) {
+    return PALETTE_COLORS[0];
+  }
+  const takenColors = new Set();
+  try {
+    const promises = memberUids.map(uid => dbFirestore.collection("users").doc(uid).get());
+    const docs = await Promise.all(promises);
+    docs.forEach(doc => {
+      if (doc.exists && doc.data().color) {
+        takenColors.add(doc.data().color.toLowerCase());
+      }
+    });
+  } catch (err) {
+    console.error("Error finding taken colors:", err);
+  }
+  for (const c of PALETTE_COLORS) {
+    if (!takenColors.has(c.toLowerCase())) {
+      return c;
+    }
+  }
+  return PALETTE_COLORS[Math.floor(Math.random() * PALETTE_COLORS.length)];
+}
+
 // Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyD86BH1L9T0V5CyLJRitOtt140RwbYYaDg",
@@ -358,7 +398,6 @@ async function handleRegister(e) {
   const email = document.getElementById('register-email').value;
   const username = document.getElementById('register-username').value.trim().toLowerCase();
   const password = document.getElementById('register-password').value;
-  const color = document.querySelector('input[name="user-color"]:checked').value;
   const familyMode = document.querySelector('input[name="family-mode"]:checked').value;
   
   const submitButton = document.querySelector('#register-form button');
@@ -383,7 +422,7 @@ async function handleRegister(e) {
       name,
       email,
       username,
-      color,
+      color: PALETTE_COLORS[0], // Default placeholder, will be updated if joining
       families: []
     };
     
@@ -418,6 +457,10 @@ async function handleRegister(e) {
       const familyDoc = fSnap.docs[0];
       const familyId = familyDoc.id;
       const familyData = familyDoc.data();
+      
+      // Auto-assign unique color for joining user
+      const assignedColor = await getUnusedColorForFamily(familyId, familyData.members || []);
+      userProfileData.color = assignedColor;
       
       const updatedMembers = [...(familyData.members || []), user.uid];
       await dbFirestore.collection("families").doc(familyId).update({ members: updatedMembers });
@@ -491,7 +534,7 @@ async function submitGoogleOnboarding(e) {
   }
   
   const username = document.getElementById('onboarding-username').value.trim().toLowerCase();
-  const color = document.querySelector('input[name="onboarding-color"]:checked').value;
+  const color = PALETTE_COLORS[0]; // Temporary default, adjusted once they join a family group
   const name = currentUser.displayName || username;
   const email = currentUser.email;
   
@@ -749,7 +792,16 @@ async function handleAddFamilyMember(e) {
   const email = document.getElementById('new-member-email').value;
   const username = document.getElementById('new-member-username').value.trim().toLowerCase();
   const password = document.getElementById('new-member-password').value;
-  const color = document.querySelector('input[name="new-user-color"]:checked').value;
+  
+  // Auto-assign unique color that is not taken by any active family member
+  const takenColors = new Set(familyMembers.map(m => m.color.toLowerCase()));
+  let color = PALETTE_COLORS[0];
+  for (const c of PALETTE_COLORS) {
+    if (!takenColors.has(c.toLowerCase())) {
+      color = c;
+      break;
+    }
+  }
   
   const submitButton = document.querySelector('#add-member-form button');
   submitButton.innerText = 'Creating Account...';
@@ -1382,13 +1434,21 @@ async function handleJoinFamilyFromHub(e) {
       throw new Error("You are already a member of this family group.");
     }
     
+    // Find unique color in the family they are joining
+    const newColor = await getUnusedColorForFamily(familyId, familyData.members || []);
+    
     // Update family members
     const updatedMembers = [...(familyData.members || []), currentUser.uid];
     await dbFirestore.collection("families").doc(familyId).update({ members: updatedMembers });
     
-    // Update user profile
+    // Update user profile with the new unique color
     const updatedFamilies = [...(userProfile.families || []), familyId];
-    await dbFirestore.collection("users").doc(currentUser.uid).update({ families: updatedFamilies });
+    await dbFirestore.collection("users").doc(currentUser.uid).update({ 
+      families: updatedFamilies,
+      color: newColor
+    });
+    
+    userProfile.color = newColor; // Keep local state in sync
     
     showToast('Successfully joined the group!');
     
