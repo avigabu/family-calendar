@@ -724,12 +724,13 @@ function renderFamilyHub() {
     
     const isMe = currentUser && m.id === currentUser.uid;
     
+    const badgeText = m.isChild ? 'Child / No Account' : m.email;
     div.innerHTML = `
       <div class="member-info-col">
         <div class="member-color-indicator"></div>
         <span class="member-name">${m.name} ${isMe ? '(You)' : ''}</span>
       </div>
-      <div class="member-badge">${m.email}</div>
+      <div class="member-badge">${badgeText}</div>
     `;
     list.appendChild(div);
   });
@@ -744,11 +745,14 @@ function copyInviteCode() {
   });
 }
 
-async function handleAddFamilyMember(e) {
+async function handleAddChildMember(e) {
   e.preventDefault();
-  const name = document.getElementById('new-member-name').value;
-  const email = document.getElementById('new-member-email').value;
-  const password = document.getElementById('new-member-password').value;
+  const name = document.getElementById('new-member-name').value.trim();
+  if (!name) return;
+  
+  const submitButton = document.querySelector('#add-member-form button');
+  submitButton.innerText = 'Adding...';
+  submitButton.disabled = true;
   
   // Auto-assign unique color that is not taken by any active family member
   const takenColors = new Set(familyMembers.map(m => m.color.toLowerCase()));
@@ -760,44 +764,30 @@ async function handleAddFamilyMember(e) {
     }
   }
   
-  const submitButton = document.querySelector('#add-member-form button');
-  submitButton.innerText = 'Creating Account...';
-  submitButton.disabled = true;
+  const childId = 'child_' + generateUUID();
   
-  let secondaryApp = null;
   try {
-    const secondaryAppName = "temp_" + generateUUID().substring(0, 8);
-    secondaryApp = firebase.initializeApp(firebaseConfig, secondaryAppName);
-    const secondaryAuth = secondaryApp.auth();
-    const secondaryDb = secondaryApp.firestore();
-    
-    const credential = await secondaryAuth.createUserWithEmailAndPassword(email, password);
-    const newUid = credential.user.uid;
-    
-    await secondaryDb.collection("users").doc(newUid).set({
+    // Create virtual child profile document in Firestore
+    await dbFirestore.collection("users").doc(childId).set({
       name,
-      email,
+      email: "", // Child has no email
       color,
-      families: [activeFamilyId]
+      families: [activeFamilyId],
+      isChild: true,
+      parentUid: currentUser.uid
     });
     
-    await secondaryAuth.signOut();
-    
-    const updatedMembers = [...(currentFamily.members || []), newUid];
+    // Add childId to the family's member array
+    const updatedMembers = [...(currentFamily.members || []), childId];
     await dbFirestore.collection("families").doc(activeFamilyId).update({ members: updatedMembers });
     
     showToast(`${name} added to family!`);
     document.getElementById('add-member-form').reset();
-    
   } catch (err) {
-    showToast(err.message, 'error');
+    console.error("Failed to add child member:", err);
+    showToast("Error: " + err.message, 'error');
   } finally {
-    if (secondaryApp) {
-      try {
-        await secondaryApp.delete();
-      } catch (e) {}
-    }
-    submitButton.innerText = 'Add Member Account';
+    submitButton.innerText = 'Add to Group';
     submitButton.disabled = false;
   }
 }
