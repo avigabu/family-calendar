@@ -530,6 +530,79 @@ async function submitGoogleOnboarding(e) {
   }
 }
 
+async function handleDeleteAccount() {
+  if (!currentUser || !userProfile) return;
+  
+  const confirmation = confirm("WARNING: This will permanently delete your account, your profile, and remove you from all family groups. Any events you created will also be deleted. This action cannot be undone.\n\nAre you sure you want to proceed?");
+  
+  if (!confirmation) return;
+  
+  const deleteBtn = document.getElementById('btn-delete-account');
+  const originalText = deleteBtn.innerHTML;
+  deleteBtn.innerText = 'Deleting account...';
+  deleteBtn.disabled = true;
+  
+  try {
+    const uid = currentUser.uid;
+    const joinedFamilies = [...(userProfile.families || [])];
+    
+    // 1. Remove user UID from families
+    for (const familyId of joinedFamilies) {
+      const familyRef = dbFirestore.collection("families").doc(familyId);
+      const doc = await familyRef.get();
+      if (doc.exists) {
+        const familyData = doc.data();
+        const updatedMembers = (familyData.members || []).filter(m => m !== uid);
+        
+        if (updatedMembers.length === 0) {
+          // If no members are left in this family group, we can delete the family document
+          await familyRef.delete();
+        } else {
+          await familyRef.update({ members: updatedMembers });
+        }
+      }
+    }
+    
+    // 2. Delete events created by the user, and remove user from relevantTo arrays of other events
+    if (joinedFamilies.length > 0) {
+      const eventsSnap = await dbFirestore.collection("events")
+        .where("familyId", "in", joinedFamilies)
+        .get();
+        
+      const batch = dbFirestore.batch();
+      eventsSnap.forEach(doc => {
+        const eventData = doc.data();
+        if (eventData.createdBy === uid) {
+          batch.delete(doc.ref);
+        } else if (Array.isArray(eventData.relevantTo) && eventData.relevantTo.includes(uid)) {
+          const updatedRelevant = eventData.relevantTo.filter(id => id !== uid);
+          batch.update(doc.ref, { relevantTo: updatedRelevant });
+        }
+      });
+      await batch.commit();
+    }
+    
+    // 3. Delete user profile document
+    await dbFirestore.collection("users").doc(uid).delete();
+    
+    // 4. Delete Auth user account
+    await currentUser.delete();
+    
+    showToast('Your account has been permanently deleted.');
+    
+  } catch (err) {
+    console.error("Account deletion failed:", err);
+    if (err.code === 'auth/requires-recent-login') {
+      showToast('For security reasons, deleting your account requires a recent login. Please log out, log back in, and try again.', 'error');
+    } else {
+      showToast('Error deleting account: ' + err.message, 'error');
+    }
+    // Re-enable delete button
+    deleteBtn.innerHTML = originalText;
+    deleteBtn.disabled = false;
+  }
+}
+
 // ================= PASSWORD RESET FLOW =================
 
 function showForgotPassword(e) {
