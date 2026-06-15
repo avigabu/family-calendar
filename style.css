@@ -653,8 +653,8 @@ label {
 
 .month-day.today, .month-day.today.selected {
   /* Today's cell itself doesn't have a highlight border/background to prevent double highlighting */
-  border-color: var(--border-light);
-  background: var(--bg-card);
+  border-color: var(--border-light) !important;
+  background: var(--bg-card) !important;
 }
 
 .month-day.selected {
