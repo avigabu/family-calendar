@@ -1990,14 +1990,6 @@ label {
   text-align: left;
 }
 
-[dir="rtl"] .header-calendar-nav {
-  flex-direction: row-reverse;
-}
-
-[dir="rtl"] .header-calendar-nav svg,
-[dir="rtl"] .calendar-nav svg {
-  transform: rotate(180deg);
-}
 
 [dir="rtl"] .floating-add-btn {
   right: auto;
