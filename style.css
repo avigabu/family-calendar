@@ -1767,7 +1767,7 @@ label {
     height: 60px;
     overflow: hidden;
     border-radius: 6px;
-    padding: 2px 4px;
+    padding: 2px 2px; /* absolute minimum horizontal padding */
   }
 
   .month-grid {
@@ -1777,16 +1777,13 @@ label {
   }
 
   .month-event-pill {
+    font-size: 8px; /* smaller title font on mobile to fit more characters */
     font-weight: 500; /* Slimmer text */
     letter-spacing: -0.3px; /* Tighter letter spacing */
   }
 
   .month-event-pill .pill-time {
-    font-size: 7px; /* smaller time font on mobile */
-    font-weight: 500; /* slimmer font weight for time */
-    opacity: 0.7; /* make time less prominent */
-    letter-spacing: -0.3px;
-    margin-right: 2px;
+    display: none !important; /* Hide time on mobile monthly grid to maximize title space */
   }
 
   /* Monthly calendar layout with self-scrolling daily agenda at bottom */
