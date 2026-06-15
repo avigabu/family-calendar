@@ -85,6 +85,7 @@ let userProfileUnsubscribe = null;
 // ================= INITIALIZATION & AUTH =================
 
 document.addEventListener('DOMContentLoaded', () => {
+  setupSwipeGestures();
   // Listen for authentication changes
   auth.onAuthStateChanged(async (user) => {
     if (user) {
@@ -860,7 +861,10 @@ function renderMonthlyGrid() {
   const month = currentDate.getMonth();
   
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  document.getElementById('calendar-title').innerText = `${monthNames[month]} ${year}`;
+  const titleText = `${monthNames[month]} ${year}`;
+  document.getElementById('calendar-title').innerText = titleText;
+  const headerTitle = document.getElementById('header-calendar-title');
+  if (headerTitle) headerTitle.innerText = titleText;
   
   const firstDayIndex = new Date(year, month, 1).getDay();
   const totalDays = new Date(year, month + 1, 0).getDate();
@@ -1038,7 +1042,10 @@ function renderWeeklyLayout() {
   endOfWeek.setDate(sunday.getDate() + 6);
   
   const options = { month: 'short', day: 'numeric' };
-  document.getElementById('calendar-title').innerText = `${sunday.toLocaleDateString('en-US', options)} - ${endOfWeek.toLocaleDateString('en-US', options)}, ${endOfWeek.getFullYear()}`;
+  const titleText = `${sunday.toLocaleDateString('en-US', options)} - ${endOfWeek.toLocaleDateString('en-US', options)}, ${endOfWeek.getFullYear()}`;
+  document.getElementById('calendar-title').innerText = titleText;
+  const headerTitle = document.getElementById('header-calendar-title');
+  if (headerTitle) headerTitle.innerText = titleText;
   
   const todayStr = new Date().toISOString().split('T')[0];
   
@@ -1469,5 +1476,93 @@ function togglePasswordVisibility(inputId, buttonEl) {
         <circle cx="12" cy="12" r="3"/>
       </svg>
     `;
+  }
+}
+
+// ================= SWIPE GESTURE DETECTION (MOBILE) =================
+let touchStartX = 0;
+let touchStartY = 0;
+let touchEndX = 0;
+let touchEndY = 0;
+
+function setupSwipeGestures() {
+  const monthlyGrid = document.getElementById('monthly-grid');
+  const weeklyGrid = document.getElementById('weekly-grid');
+  
+  const bindGrid = (gridEl) => {
+    if (!gridEl) return;
+    
+    gridEl.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    
+    gridEl.addEventListener('touchmove', (e) => {
+      if (touchStartX === 0 && touchStartY === 0) return;
+      if (e.touches.length !== 1) return;
+      
+      const curX = e.touches[0].clientX;
+      const curY = e.touches[0].clientY;
+      const diffX = curX - touchStartX;
+      const diffY = curY - touchStartY;
+      
+      // Prevent browser default scroll if the movement is a clear swipe
+      if (Math.abs(diffX) > 10 || Math.abs(diffY) > 10) {
+        if (e.cancelable) e.preventDefault();
+      }
+    }, { passive: false });
+    
+    gridEl.addEventListener('touchend', (e) => {
+      if (touchStartX === 0 && touchStartY === 0) return;
+      if (e.changedTouches.length !== 1) return;
+      
+      touchEndX = e.changedTouches[0].clientX;
+      touchEndY = e.changedTouches[0].clientY;
+      
+      handleSwipeGesture();
+      
+      touchStartX = 0;
+      touchStartY = 0;
+    }, { passive: true });
+  };
+  
+  bindGrid(monthlyGrid);
+  bindGrid(weeklyGrid);
+}
+
+function handleSwipeGesture() {
+  const diffX = touchEndX - touchStartX;
+  const diffY = touchEndY - touchStartY;
+  const threshold = 50; // threshold for a swipe in px
+  
+  if (Math.abs(diffX) > Math.abs(diffY)) {
+    // Horizontal swipe -> Mode switch (Month / Week)
+    if (Math.abs(diffX) > threshold) {
+      if (diffX > 0) {
+        // Swipe Right -> Switch to Month view
+        if (calendarMode !== 'month') {
+          setCalendarMode('month');
+          showToast('Switched to Month view', 'info');
+        }
+      } else {
+        // Swipe Left -> Switch to Week view
+        if (calendarMode !== 'week') {
+          setCalendarMode('week');
+          showToast('Switched to Week view', 'info');
+        }
+      }
+    }
+  } else {
+    // Vertical swipe -> Navigation (Prev / Next Month or Week)
+    if (Math.abs(diffY) > threshold) {
+      if (diffY > 0) {
+        // Swipe Down -> Prev Month / Week
+        changeDateRange(-1);
+      } else {
+        // Swipe Up -> Next Month / Week
+        changeDateRange(1);
+      }
+    }
   }
 }
