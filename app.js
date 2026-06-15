@@ -88,7 +88,43 @@ const TRANSLATIONS = {
     cat_appointment: "Appointment 🏥",
     cat_fun: "Fun Activity 🎉",
     cat_school: "School / Education 📚",
-    cat_work: "Work 💼"
+    cat_work: "Work 💼",
+    filter_label: "Filter:",
+    agenda_prefix: "Agenda:",
+    no_events_today: "No events scheduled for this day.",
+    add_btn_text: "Add",
+    family_hub: "Family Hub",
+    family_subtitle: "Manage group members and invite others",
+    invite_code_label: "Family Invite Code:",
+    invite_code_desc: "Share this code with family members so they can join this group.",
+    copy: "Copy",
+    add_member_no_account: "Add Child / Member without Account",
+    member_name: "Member Name",
+    add_to_group: "Add to Group",
+    groups_and_circles: "Groups & Circles",
+    create_or_join_group: "Create or Join Another Group",
+    create_new_group: "Create a New Group",
+    join_existing_group: "Join an Existing Group",
+    create_group: "Create Group",
+    join_group: "Join Group",
+    placeholder_member_name: "e.g. Leo (Son)",
+    placeholder_group_name: "e.g. Parents & Brothers",
+    placeholder_join_code: "e.g. FAM-A1B2C3",
+    placeholder_family_name: "e.g. Smith Family",
+    join_or_create_family: "Join or Create a Family",
+    no_family_joined_desc: "You are not part of any family group yet.",
+    create_new_family_group: "Create a New Family Group",
+    family_name_label: "Family Surname / Group Name",
+    create_family_group: "Create Family Group",
+    or_join_existing_family: "Or Join Existing Family",
+    join_with_invite_code: "Join with Invite Code",
+    join_family_group: "Join Family Group",
+    members: "Members",
+    adding: "Adding...",
+    saving: "Saving...",
+    you: "(You)",
+    child_no_account: "Child / No Account",
+    new_event: "New Event"
   },
   de: {
     calendar: "Kalender",
@@ -163,7 +199,43 @@ const TRANSLATIONS = {
     cat_appointment: "Termin 🏥",
     cat_fun: "Freizeit 🎉",
     cat_school: "Schule / Bildung 📚",
-    cat_work: "Arbeit 💼"
+    cat_work: "Arbeit 💼",
+    filter_label: "Filtern:",
+    agenda_prefix: "Termine:",
+    no_events_today: "Keine Termine für diesen Tag geplant.",
+    add_btn_text: "Hinzufügen",
+    family_hub: "Familien-Hub",
+    family_subtitle: "Mitglieder verwalten und andere einladen",
+    invite_code_label: "Familien-Einladungscode:",
+    invite_code_desc: "Teile diesen Code mit Familienmitgliedern, damit sie dieser Gruppe beitreten können.",
+    copy: "Kopieren",
+    add_member_no_account: "Kind / Mitglied ohne Konto hinzufügen",
+    member_name: "Name des Mitglieds",
+    add_to_group: "Zur Gruppe hinzufügen",
+    groups_and_circles: "Gruppen & Kreise",
+    create_or_join_group: "Weitere Gruppe erstellen oder beitreten",
+    create_new_group: "Neue Gruppe erstellen",
+    join_existing_group: "Bestehender Gruppe beitreten",
+    create_group: "Gruppe erstellen",
+    join_group: "Gruppe beitreten",
+    placeholder_member_name: "z.B. Leo (Sohn)",
+    placeholder_group_name: "z.B. Eltern & Brüder",
+    placeholder_join_code: "z.B. FAM-A1B2C3",
+    placeholder_family_name: "z.B. Familie Müller",
+    join_or_create_family: "Familie beitreten oder erstellen",
+    no_family_joined_desc: "Du bist noch Mitglied keiner Familiengruppe.",
+    create_new_family_group: "Neue Familiengruppe erstellen",
+    family_name_label: "Familienname / Gruppenname",
+    create_family_group: "Familiengruppe erstellen",
+    or_join_existing_family: "Oder bestehender Familie beitreten",
+    join_with_invite_code: "Mit Einladungscode beitreten",
+    join_family_group: "Familiengruppe beitreten",
+    members: "Mitglieder",
+    adding: "Wird hinzugefügt...",
+    saving: "Wird gespeichert...",
+    you: "(Du)",
+    child_no_account: "Kind / Kein Konto",
+    new_event: "Neuer Termin"
   },
   he: {
     calendar: "לוח שנה",
@@ -238,7 +310,43 @@ const TRANSLATIONS = {
     cat_appointment: "תור 🏥",
     cat_fun: "פעילות מהנה 🎉",
     cat_school: "בית ספר / לימודים 📚",
-    cat_work: "עבודה 💼"
+    cat_work: "עבודה 💼",
+    filter_label: "סינון:",
+    agenda_prefix: "סדר יום:",
+    no_events_today: "אין אירועים מתוכננים ליום זה.",
+    add_btn_text: "הוספה",
+    family_hub: "מרכז המשפחה",
+    family_subtitle: "ניהול חברי הקבוצה והזמנת אחרים",
+    invite_code_label: "קוד הזמנה למשפחה:",
+    invite_code_desc: "שתף קוד זה עם בני משפחה כדי שיוכלו להצטרף לקבוצה.",
+    copy: "העתק",
+    add_member_no_account: "הוסף ילד / חבר ללא חשבון",
+    member_name: "שם החבר",
+    add_to_group: "הוסף לקבוצה",
+    groups_and_circles: "קבוצות ומעגלים",
+    create_or_join_group: "צור או הצטרף לקבוצה נוספת",
+    create_new_group: "צור קבוצה חדשה",
+    join_existing_group: "הצטרף לקבוצה קיימת",
+    create_group: "צור קבוצה",
+    join_group: "הצטרף לקבוצה",
+    placeholder_member_name: "למשל: ליאו (בן)",
+    placeholder_group_name: "למשל: הורים ואחים",
+    placeholder_join_code: "למשל: FAM-A1B2C3",
+    placeholder_family_name: "למשל: משפחת כהן",
+    join_or_create_family: "הצטרף או צור משפחה",
+    no_family_joined_desc: "אינך חלק מקבוצה משפחתית עדיין.",
+    create_new_family_group: "צור קבוצה משפחתית חדשה",
+    family_name_label: "שם משפחה / שם קבוצה",
+    create_family_group: "צור קבוצה משפחתית",
+    or_join_existing_family: "או הצטרף למשפחה קיימת",
+    join_with_invite_code: "הצטרף באמצעות קוד הזמנה",
+    join_family_group: "הצטרף לקבוצה משפחתית",
+    members: "חברים",
+    adding: "מוסיף...",
+    saving: "שומר...",
+    you: "(אני)",
+    child_no_account: "ילד / ללא חשבון",
+    new_event: "אירוע חדש"
   }
 };
 
@@ -314,6 +422,23 @@ function applyLanguageUI() {
     const key = el.getAttribute('data-i18n');
     el.innerText = t(key);
   });
+
+  // Translate input placeholders marked with data-i18n-placeholder
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    el.setAttribute('placeholder', t(key));
+  });
+
+  // Re-render currently active view to update date formatting, titles, and dynamic strings
+  if (activeView === 'calendar') {
+    if (calendarMode === 'month') {
+      renderMonthlyGrid();
+    } else {
+      renderWeeklyLayout();
+    }
+  } else if (activeView === 'family') {
+    renderFamilyHub();
+  }
 }
 
 // Color palette for automatic member colors
@@ -656,7 +781,7 @@ function updateHeaderAndProfile() {
   document.getElementById('settings-avatar').style.backgroundColor = userProfile.color;
   document.getElementById('settings-user-name').innerText = userProfile.name;
   document.getElementById('settings-username-handle').innerText = userProfile.email;
-  document.getElementById('settings-family-name').innerText = currentFamily ? currentFamily.name : 'No Family Group';
+  document.getElementById('settings-family-name').innerText = currentFamily ? currentFamily.name : t('no_family_joined');
 }
 
 // Switch registration / login tabs
@@ -1067,11 +1192,11 @@ function renderFamilyHub() {
     
     const isMe = currentUser && m.id === currentUser.uid;
     
-    const badgeText = m.isChild ? 'Child / No Account' : m.email;
+    const badgeText = m.isChild ? t('child_no_account') : m.email;
     div.innerHTML = `
       <div class="member-info-col">
         <div class="member-color-indicator"></div>
-        <span class="member-name">${m.name} ${isMe ? '(You)' : ''}</span>
+        <span class="member-name">${m.name} ${isMe ? t('you') : ''}</span>
       </div>
       <div class="member-badge">${badgeText}</div>
     `;
@@ -1094,7 +1219,7 @@ async function handleAddChildMember(e) {
   if (!name) return;
   
   const submitButton = document.querySelector('#add-member-form button');
-  submitButton.innerText = 'Adding...';
+  submitButton.innerText = t('adding');
   submitButton.disabled = true;
   
   // Auto-assign unique color that is not taken by any active family member
@@ -1130,7 +1255,7 @@ async function handleAddChildMember(e) {
     console.error("Failed to add child member:", err);
     showToast("Error: " + err.message, 'error');
   } finally {
-    submitButton.innerText = 'Add to Group';
+    submitButton.innerText = t('add_to_group');
     submitButton.disabled = false;
   }
 }
@@ -1334,15 +1459,17 @@ function renderDailyAgenda() {
   panel.className = 'section-card';
   panel.style.marginTop = '16px';
   
+  const lang = userProfile?.settings?.language || 'en';
+  const locale = lang === 'he' ? 'he-IL' : (lang === 'de' ? 'de-DE' : 'en-US');
   const dateObj = new Date(selectedDay);
   const options = { weekday: 'long', month: 'long', day: 'numeric' };
-  const dateFormatted = dateObj.toLocaleDateString('en-US', options);
+  const dateFormatted = dateObj.toLocaleDateString(locale, options);
   
   const dayEvents = getFilteredEventsForDate(selectedDay);
   
   let eventsListHtml = '';
   if (dayEvents.length === 0) {
-    eventsListHtml = `<p class="empty-day-message">No events scheduled for this day.</p>`;
+    eventsListHtml = `<p class="empty-day-message">${t('no_events_today')}</p>`;
   } else {
     dayEvents.forEach(evt => {
       const creator = familyMembers.find(m => m.id === evt.createdBy);
@@ -1379,9 +1506,9 @@ function renderDailyAgenda() {
   
   panel.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-      <h3 style="margin-bottom: 0;">Agenda: ${dateFormatted}</h3>
+      <h3 style="margin-bottom: 0;">${t('agenda_prefix')} ${dateFormatted}</h3>
       <button class="btn btn-outline btn-sm" onclick="openEventModalForDate('${selectedDay}')">
-        <span>+ Add</span>
+        <span>+ ${t('add_btn_text')}</span>
       </button>
     </div>
     <div class="week-events-list">${eventsListHtml}</div>
@@ -1422,7 +1549,9 @@ function renderWeeklyLayout() {
     const dayDateStr = dayDate.toISOString().split('T')[0];
     const isToday = dayDateStr === todayStr;
     
-    const dayName = dayDate.toLocaleDateString(locale, { weekday: 'short' });
+    const dayOfWeekIndex = dayDate.getDay();
+    const dayKeys = ['sunday_short', 'monday_short', 'tuesday_short', 'wednesday_short', 'thursday_short', 'friday_short', 'saturday_short'];
+    const dayName = t(dayKeys[dayOfWeekIndex]);
     const dayNum = dayDate.getDate();
     
     const dayRow = document.createElement('div');
@@ -1601,7 +1730,7 @@ async function handleEventSubmit(e) {
   };
   
   const submitButton = document.querySelector('#event-form button[type="submit"]');
-  submitButton.innerText = 'Saving...';
+  submitButton.innerText = t('saving');
   submitButton.disabled = true;
   
   try {
@@ -1616,7 +1745,7 @@ async function handleEventSubmit(e) {
   } catch (err) {
     showToast(err.message, 'error');
   } finally {
-    submitButton.innerText = 'Save Event';
+    submitButton.innerText = t('save_event');
     submitButton.disabled = false;
   }
 }

@@ -8,7 +8,7 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   
   <!-- Web App Capabilities & Icon -->
@@ -235,7 +235,7 @@
 
         <!-- Filter Bar -->
         <div class="filter-bar">
-          <span class="filter-label">Filter:</span>
+          <span class="filter-label" data-i18n="filter_label">Filter:</span>
           <div class="filter-options" id="calendar-filter-options">
             <!-- Dynamically populated checkboxes of family members -->
           </div>
@@ -269,11 +269,11 @@
       <section id="view-family" class="app-section">
         <!-- Active Family Hub Panel -->
         <div id="family-hub-active" class="section-card">
-          <h2>Family Hub</h2>
-          <p class="section-subtitle">Manage group members and invite others</p>
+          <h2 data-i18n="family_hub">Family Hub</h2>
+          <p class="section-subtitle" data-i18n="family_subtitle">Manage group members and invite others</p>
           
           <div class="invite-box">
-            <span class="invite-label">Family Invite Code:</span>
+            <span class="invite-label" data-i18n="invite_code_label">Family Invite Code:</span>
             <div class="invite-code-wrapper">
               <span id="family-invite-code" class="invite-code">---</span>
               <button class="btn btn-outline btn-sm" onclick="copyInviteCode()">
@@ -281,82 +281,82 @@
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                 </svg>
-                <span>Copy</span>
+                <span data-i18n="copy">Copy</span>
               </button>
             </div>
-            <p class="invite-info-text">Share this code with family members so they can join this group.</p>
+            <p class="invite-info-text" data-i18n="invite_code_desc">Share this code with family members so they can join this group.</p>
           </div>
 
-          <h3>Members</h3>
+          <h3 data-i18n="members">Members</h3>
           <div class="members-list" id="family-members-list">
             <!-- Dynamic family members list -->
           </div>
 
           <div class="add-member-divider">
-            <span>Add Child / Member without Account</span>
+            <span data-i18n="add_member_no_account">Add Child / Member without Account</span>
           </div>
 
           <!-- Add Child Member form -->
           <form id="add-member-form" class="add-member-form" onsubmit="handleAddChildMember(event)">
             <div class="form-group">
-              <label for="new-member-name">Member Name</label>
-              <input type="text" id="new-member-name" placeholder="e.g. Leo (Son)" required>
+              <label for="new-member-name" data-i18n="member_name">Member Name</label>
+              <input type="text" id="new-member-name" placeholder="e.g. Leo (Son)" required data-i18n-placeholder="placeholder_member_name">
             </div>
 
-            <button type="submit" class="btn btn-outline btn-block">Add to Group</button>
+            <button type="submit" class="btn btn-outline btn-block" data-i18n="add_to_group">Add to Group</button>
           </form>
 
           <div class="add-member-divider" style="margin-top: 32px;">
-            <span>Groups & Circles</span>
+            <span data-i18n="groups_and_circles">Groups & Circles</span>
           </div>
 
           <!-- Manage multiple groups -->
           <details class="collapsible-details" style="margin-top: 12px; cursor: pointer; font-size: 13px;">
-            <summary style="font-weight: 600; color: var(--accent-primary); margin-bottom: 8px;">Create or Join Another Group</summary>
+            <summary style="font-weight: 600; color: var(--accent-primary); margin-bottom: 8px;" data-i18n="create_or_join_group">Create or Join Another Group</summary>
             
             <form onsubmit="handleCreateFamilyFromHub(event)" style="margin-top: 12px; margin-bottom: 20px; background: rgba(0,0,0,0.15); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); text-align: left;">
-              <h4 style="font-size: 13px; margin-bottom: 8px; font-weight: 700;">Create a New Group</h4>
+              <h4 style="font-size: 13px; margin-bottom: 8px; font-weight: 700;" data-i18n="create_new_group">Create a New Group</h4>
               <div class="form-group" style="margin-bottom: 12px;">
-                <input type="text" id="hub-create-name-active" placeholder="e.g. Parents & Brothers" required style="padding: 8px 12px; font-size: 13px;">
+                <input type="text" id="hub-create-name-active" placeholder="e.g. Parents & Brothers" required style="padding: 8px 12px; font-size: 13px;" data-i18n-placeholder="placeholder_group_name">
               </div>
-              <button type="submit" class="btn btn-primary btn-sm btn-block">Create Group</button>
+              <button type="submit" class="btn btn-primary btn-sm btn-block" data-i18n="create_group">Create Group</button>
             </form>
 
             <form onsubmit="handleJoinFamilyFromHub(event)" style="background: rgba(0,0,0,0.15); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); text-align: left;">
-              <h4 style="font-size: 13px; margin-bottom: 8px; font-weight: 700;">Join an Existing Group</h4>
+              <h4 style="font-size: 13px; margin-bottom: 8px; font-weight: 700;" data-i18n="join_existing_group">Join an Existing Group</h4>
               <div class="form-group" style="margin-bottom: 12px;">
-                <input type="text" id="hub-join-code-active" placeholder="e.g. FAM-A1B2C3" required style="padding: 8px 12px; font-size: 13px;">
+                <input type="text" id="hub-join-code-active" placeholder="e.g. FAM-A1B2C3" required style="padding: 8px 12px; font-size: 13px;" data-i18n-placeholder="placeholder_join_code">
               </div>
-              <button type="submit" class="btn btn-outline btn-sm btn-block">Join Group</button>
+              <button type="submit" class="btn btn-outline btn-sm btn-block" data-i18n="join_group">Join Group</button>
             </form>
           </details>
         </div>
 
         <!-- Empty State Family Hub Panel -->
         <div id="family-hub-empty" class="section-card" style="display: none;">
-          <h2>Join or Create a Family</h2>
-          <p class="section-subtitle">You are not part of any family group yet.</p>
+          <h2 data-i18n="join_or_create_family">Join or Create a Family</h2>
+          <p class="section-subtitle" data-i18n="no_family_joined_desc">You are not part of any family group yet.</p>
           
           <form onsubmit="handleCreateFamilyFromHub(event)" style="margin-bottom: 2rem;">
-            <h3>Create a New Family Group</h3>
+            <h3 data-i18n="create_new_family_group">Create a New Family Group</h3>
             <div class="form-group">
-              <label for="hub-create-name-empty">Family Surname / Group Name</label>
-              <input type="text" id="hub-create-name-empty" placeholder="e.g. Smith Family" required>
+              <label for="hub-create-name-empty" data-i18n="family_name_label">Family Surname / Group Name</label>
+              <input type="text" id="hub-create-name-empty" placeholder="e.g. Smith Family" required data-i18n-placeholder="placeholder_family_name">
             </div>
-            <button type="submit" class="btn btn-primary btn-block">Create Family Group</button>
+            <button type="submit" class="btn btn-primary btn-block" data-i18n="create_family_group">Create Family Group</button>
           </form>
 
           <div class="add-member-divider">
-            <span>Or Join Existing Family</span>
+            <span data-i18n="or_join_existing_family">Or Join Existing Family</span>
           </div>
 
           <form onsubmit="handleJoinFamilyFromHub(event)">
-            <h3>Join with Invite Code</h3>
+            <h3 data-i18n="join_with_invite_code">Join with Invite Code</h3>
             <div class="form-group">
-              <label for="hub-join-code-empty">Invitation Code</label>
-              <input type="text" id="hub-join-code-empty" placeholder="e.g. FAM-A1B2C3" required>
+              <label for="hub-join-code-empty" data-i18n="invite_code_label">Invitation Code</label>
+              <input type="text" id="hub-join-code-empty" placeholder="e.g. FAM-A1B2C3" required data-i18n-placeholder="placeholder_join_code">
             </div>
-            <button type="submit" class="btn btn-outline btn-block">Join Family Group</button>
+            <button type="submit" class="btn btn-outline btn-block" data-i18n="join_family_group">Join Family Group</button>
           </form>
         </div>
       </section>
@@ -364,7 +364,7 @@
       <!-- VIEW 3: SETTINGS VIEW -->
       <section id="view-settings" class="app-section">
         <div class="section-card">
-          <h2 id="settings-title">My Profile</h2>
+          <h2 id="settings-title" data-i18n="my_profile">My Profile</h2>
           <div class="profile-details-card">
             <div class="profile-main-info">
               <div class="profile-big-avatar" id="settings-avatar" style="background-color: #3b82f6;">S</div>
@@ -378,24 +378,24 @@
           <div class="settings-list">
             <div class="settings-item">
               <div class="settings-item-info">
-                <span id="settings-label-family">Current Family Group</span>
-                <span class="settings-item-value" id="settings-family-name">No Family Joined</span>
+                <span id="settings-label-family" data-i18n="current_family_group">Current Family Group</span>
+                <span class="settings-item-value" id="settings-family-name" data-i18n="no_family_joined">No Family Joined</span>
               </div>
             </div>
 
             <div class="settings-item">
               <div class="settings-item-info" style="flex: 1; margin-right: 12px;">
-                <span id="label-week-start">Start of Week</span>
+                <span id="label-week-start" data-i18n="start_of_week">Start of Week</span>
               </div>
               <select id="settings-week-start" onchange="updateUserSetting('weekStart', this.value)" style="width: auto; padding: 6px 12px; font-size: 13px; height: 32px; border-radius: 6px; border: 1px solid var(--border-light); background: var(--bg-input); color: var(--text-primary); cursor: pointer; outline: none;">
-                <option value="sunday" id="opt-sunday">Sunday</option>
-                <option value="monday" id="opt-monday">Monday</option>
+                <option value="sunday" id="opt-sunday" data-i18n="sunday">Sunday</option>
+                <option value="monday" id="opt-monday" data-i18n="monday">Monday</option>
               </select>
             </div>
 
             <div class="settings-item">
               <div class="settings-item-info" style="flex: 1; margin-right: 12px;">
-                <span id="label-language">Language</span>
+                <span id="label-language" data-i18n="language">Language</span>
               </div>
               <select id="settings-language" onchange="updateUserSetting('language', this.value)" style="width: auto; padding: 6px 12px; font-size: 13px; height: 32px; border-radius: 6px; border: 1px solid var(--border-light); background: var(--bg-input); color: var(--text-primary); cursor: pointer; outline: none;">
                 <option value="en">English</option>
@@ -406,11 +406,11 @@
 
             <div class="settings-item">
               <div class="settings-item-info" style="flex: 1; margin-right: 12px;">
-                <span id="label-theme">Display Mode</span>
+                <span id="label-theme" data-i18n="display_mode">Display Mode</span>
               </div>
               <select id="settings-theme" onchange="updateUserSetting('theme', this.value)" style="width: auto; padding: 6px 12px; font-size: 13px; height: 32px; border-radius: 6px; border: 1px solid var(--border-light); background: var(--bg-input); color: var(--text-primary); cursor: pointer; outline: none;">
-                <option value="dark" id="opt-dark">Dark Mode</option>
-                <option value="light" id="opt-light">Light Mode</option>
+                <option value="dark" id="opt-dark" data-i18n="dark_mode">Dark Mode</option>
+                <option value="light" id="opt-light" data-i18n="light_mode">Light Mode</option>
               </select>
             </div>
           </div>
@@ -419,7 +419,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
             </svg>
-            <span id="btn-logout-text">Log Out</span>
+            <span id="btn-logout-text" data-i18n="log_out">Log Out</span>
           </button>
 
           <button id="btn-delete-account" class="btn btn-danger-outline btn-block" onclick="handleDeleteAccount()" style="margin-top: 1rem;">
@@ -429,7 +429,7 @@
               <line x1="10" y1="11" x2="10" y2="17"/>
               <line x1="14" y1="11" x2="14" y2="17"/>
             </svg>
-            <span id="btn-delete-account-text">Delete Account</span>
+            <span id="btn-delete-account-text" data-i18n="delete_account">Delete Account</span>
           </button>
         </div>
       </section>
@@ -454,7 +454,7 @@
           <line x1="8" y1="2" x2="8" y2="6"/>
           <line x1="3" y1="10" x2="21" y2="10"/>
         </svg>
-        <span id="nav-label-calendar">Calendar</span>
+        <span id="nav-label-calendar" data-i18n="calendar">Calendar</span>
       </button>
 
       <button id="nav-btn-family" class="nav-item" onclick="navigateTo('family')">
@@ -464,7 +464,7 @@
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
           <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
-        <span id="nav-label-family">Family</span>
+        <span id="nav-label-family" data-i18n="family">Family</span>
       </button>
 
       <button id="nav-btn-settings" class="nav-item" onclick="navigateTo('settings')">
@@ -472,7 +472,7 @@
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
-        <span id="nav-label-settings">Profile</span>
+        <span id="nav-label-settings" data-i18n="settings">Profile</span>
       </button>
     </nav>
   </div>
