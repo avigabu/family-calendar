@@ -934,9 +934,10 @@ function renderMonthlyGrid() {
     dayEvents.slice(0, 3).forEach(evt => {
       const creator = familyMembers.find(m => m.id === evt.createdBy);
       const color = creator ? creator.color : 'var(--accent-primary)';
+      const shortTime = formatShortTime(evt.startTime);
       pillsHtml += `
         <div class="month-event-pill" style="--event-color: ${color}" title="${escapeHtml(evt.title)}">
-          <span class="pill-time">${evt.startTime}</span>
+          <span class="pill-time">${shortTime}</span>
           <span class="pill-title">${escapeHtml(evt.title)}</span>
         </div>
       `;
@@ -1478,6 +1479,18 @@ function togglePasswordVisibility(inputId, buttonEl) {
       </svg>
     `;
   }
+}
+
+function formatShortTime(timeStr) {
+  if (!timeStr) return '';
+  const parts = timeStr.split(':');
+  if (parts.length < 2) return timeStr;
+  let hour = parseInt(parts[0], 10);
+  let minutes = parts[1];
+  if (minutes === '00') {
+    return String(hour);
+  }
+  return `${hour}:${minutes}`;
 }
 
 // ================= SWIPE GESTURE DETECTION (MOBILE) =================

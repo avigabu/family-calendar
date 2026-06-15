@@ -1782,8 +1782,11 @@ label {
   }
 
   .month-event-pill .pill-time {
-    font-weight: 700;
+    font-size: 7px; /* smaller time font on mobile */
+    font-weight: 500; /* slimmer font weight for time */
+    opacity: 0.7; /* make time less prominent */
     letter-spacing: -0.3px;
+    margin-right: 2px;
   }
 
   /* Monthly calendar layout with self-scrolling daily agenda at bottom */
