@@ -546,7 +546,25 @@ document.addEventListener('DOMContentLoaded', () => {
               showToast("Error creating profile: " + err.message, "error");
             }
           } else {
-            console.warn("User profile does not exist for user:", user.uid);
+            console.warn("User profile does not exist for user, restoring empty profile:", user.uid);
+            const userProfileData = {
+              name: user.displayName || user.email.split('@')[0] || "Family Member",
+              email: user.email,
+              color: PALETTE_COLORS[0],
+              families: [],
+              settings: {
+                weekStart: 'sunday',
+                language: 'en',
+                theme: 'dark'
+              }
+            };
+            try {
+              await dbFirestore.collection("users").doc(user.uid).set(userProfileData);
+              showToast('Restored default profile data.', 'info');
+            } catch (err) {
+              console.error("Failed to restore profile:", err);
+              showToast("Error creating profile: " + err.message, "error");
+            }
           }
           return;
         }
@@ -980,6 +998,16 @@ async function handleDeleteAccount() {
   const originalText = deleteBtn.innerHTML;
   deleteBtn.innerText = 'Deleting account...';
   deleteBtn.disabled = true;
+  
+  // For security reasons, check if the user has signed in recently before making database changes
+  const lastSignInTime = currentUser.metadata.lastSignInTime ? new Date(currentUser.metadata.lastSignInTime).getTime() : 0;
+  const now = Date.now();
+  if (now - lastSignInTime > 5 * 60 * 1000) {
+    showToast('For security reasons, deleting your account requires a recent login. Please log out, log back in, and try again.', 'error');
+    deleteBtn.innerHTML = originalText;
+    deleteBtn.disabled = false;
+    return;
+  }
   
   try {
     const uid = currentUser.uid;
