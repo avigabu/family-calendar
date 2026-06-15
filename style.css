@@ -1639,10 +1639,46 @@ label {
     align-items: center;
     justify-content: space-between;
     flex: 1;
+    gap: 4px;
   }
 
-  .btn-today {
-    display: inline-block !important;
+  .calendar-modes .btn-segmented,
+  .calendar-modes .btn-today {
+    font-family: var(--font-family) !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    padding: 6px 12px !important;
+    height: 28px !important;
+    border-radius: 6px !important;
+    border: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .calendar-modes .btn-segmented {
+    background: transparent !important;
+    color: var(--text-secondary) !important;
+    flex: 1;
+  }
+
+  .calendar-modes .btn-segmented.active {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: var(--text-primary) !important;
+    font-weight: 700 !important;
+  }
+
+  .calendar-modes .btn-today {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid var(--border-light) !important;
+    color: var(--text-primary) !important;
+    width: auto !important;
+  }
+
+  .calendar-modes .btn-today:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
   }
 
   .month-day {
@@ -1994,7 +2030,6 @@ label {
 [dir="rtl"] .header-calendar-nav,
 [dir="rtl"] .calendar-nav {
   direction: ltr !important;
-  display: inline-flex !important;
   flex-direction: row !important;
 }
 
