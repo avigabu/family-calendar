@@ -175,7 +175,19 @@
         </select>
       </div>
 
-      <div id="header-calendar-title" class="header-calendar-title" style="display: none;"></div>
+      <div id="header-calendar-nav" class="header-calendar-nav" style="display: none;">
+        <button class="btn-header-nav" onclick="changeDateRange(-1)" title="Previous">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+        <span id="header-calendar-title" class="header-calendar-title-text"></span>
+        <button class="btn-header-nav" onclick="changeDateRange(1)" title="Next">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
+      </div>
 
       <div class="header-actions">
         <button id="header-btn-today" class="btn-header-today" onclick="setToday()" title="Go to Today">

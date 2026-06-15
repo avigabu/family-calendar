@@ -210,7 +210,11 @@ function updateFamilySwitcherUI() {
   const select = document.getElementById('header-family-select');
   
   if (userFamilies.length > 0) {
-    container.style.display = 'block';
+    if (activeView === 'calendar' && window.innerWidth < 800) {
+      container.style.setProperty('display', 'none', 'important');
+    } else {
+      container.style.display = 'block';
+    }
     select.innerHTML = '';
     
     userFamilies.forEach(f => {
@@ -655,6 +659,30 @@ function navigateTo(view) {
     floatBtn.style.display = 'flex';
   } else {
     floatBtn.style.display = 'none';
+  }
+  
+  // Toggle header elements based on active view to maximize space
+  const headerCalNav = document.getElementById('header-calendar-nav');
+  const headerTodayBtn = document.getElementById('header-btn-today');
+  const headerFamilyBadge = document.getElementById('header-family-badge');
+  
+  if (view === 'calendar') {
+    if (headerCalNav) headerCalNav.style.display = ''; // let CSS display rule apply
+    if (headerTodayBtn) headerTodayBtn.style.display = ''; // let CSS display rule apply
+    if (headerFamilyBadge) {
+      // Hide family selector on mobile only to prevent overlap with calendar nav
+      if (window.innerWidth < 800) {
+        headerFamilyBadge.style.setProperty('display', 'none', 'important');
+      } else {
+        headerFamilyBadge.style.display = userFamilies.length > 0 ? 'block' : 'none';
+      }
+    }
+  } else {
+    if (headerCalNav) headerCalNav.style.setProperty('display', 'none', 'important');
+    if (headerTodayBtn) headerTodayBtn.style.setProperty('display', 'none', 'important');
+    if (headerFamilyBadge) {
+      headerFamilyBadge.style.display = userFamilies.length > 0 ? 'block' : 'none';
+    }
   }
   
   if (view === 'family') {
@@ -1505,7 +1533,6 @@ function setupSwipeGestures() {
   
   const bindGrid = (gridEl) => {
     if (!gridEl) return;
-    const isWeekly = gridEl.id === 'weekly-grid';
     
     gridEl.addEventListener('touchstart', (e) => {
       if (e.touches.length !== 1) return;
@@ -1522,17 +1549,9 @@ function setupSwipeGestures() {
       const diffX = curX - touchStartX;
       const diffY = curY - touchStartY;
       
-      if (isWeekly) {
-        // In week view, only prevent browser default scroll for horizontal swipes (view toggling)
-        // Allow vertical swipes so the user can scroll through their meetings list naturally
-        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
-          if (e.cancelable) e.preventDefault();
-        }
-      } else {
-        // In month view, prevent default browser scroll for both horizontal and vertical swipes
-        if (Math.abs(diffX) > 10 || Math.abs(diffY) > 10) {
-          if (e.cancelable) e.preventDefault();
-        }
+      // Prevent browser default scroll only for horizontal swipes (view toggling)
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+        if (e.cancelable) e.preventDefault();
       }
     }, { passive: false });
     
@@ -1574,18 +1593,6 @@ function handleSwipeGesture() {
           setCalendarMode('week');
           showToast('Switched to Week view', 'info');
         }
-      }
-    }
-  } else {
-    // Vertical swipe -> Navigation (Prev / Next Month only)
-    // We only navigate vertically in Month view. In Week view, vertical swipe is reserved for scrolling meetings list.
-    if (calendarMode === 'month' && Math.abs(diffY) > threshold) {
-      if (diffY > 0) {
-        // Swipe Down -> Prev Month
-        changeDateRange(-1);
-      } else {
-        // Swipe Up -> Next Month
-        changeDateRange(1);
       }
     }
   }

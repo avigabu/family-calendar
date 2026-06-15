@@ -1676,7 +1676,7 @@ label {
   }
 }
 
-.btn-header-today {
+.btn-header-today, .header-calendar-nav {
   display: none;
 }
 
@@ -1705,22 +1705,57 @@ label {
     display: none;
   }
 
-  .header-calendar-title {
-    display: block !important;
-    font-size: 14px;
+  .header-calendar-nav {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .btn-header-nav {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    padding: 0;
+  }
+
+  .btn-header-nav:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+  }
+
+  .btn-header-nav:active {
+    transform: scale(0.9);
+  }
+
+  .header-calendar-title-text {
+    font-size: 13px;
     font-weight: 800;
     letter-spacing: 0.5px;
     color: var(--text-primary);
     text-align: center;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    white-space: nowrap;
   }
 
   .header-actions {
     display: flex;
     align-items: center;
     gap: 10px;
+  }
+
+  .header-profile {
+    display: none !important; /* hide profile avatar on mobile header to make room */
   }
 
   .btn-header-today {
