@@ -1676,6 +1676,10 @@ label {
   }
 }
 
+.btn-header-today {
+  display: none;
+}
+
 /* ================= MOBILE LAYOUT & GESTURE COMBACTION (< 800px) ================= */
 @media (max-width: 799px) {
   /* No-scroll mobile framework */
@@ -1684,6 +1688,8 @@ label {
     flex-direction: column;
     overflow: hidden;
     min-height: 0;
+    padding: 4px; /* compact padding to use full screen width */
+    padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 8px);
   }
 
   .app-section.active-section {
@@ -1692,10 +1698,6 @@ label {
     flex: 1;
     min-height: 0;
     overflow: hidden;
-  }
-
-  .app-main {
-    padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + 8px);
   }
 
   /* Compact header with centered calendar title & Today button */
@@ -1728,7 +1730,7 @@ label {
     width: 28px;
     height: 28px;
     border-radius: 50%;
-    display: flex;
+    display: flex !important; /* Force display on mobile */
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -1764,6 +1766,24 @@ label {
   .month-day {
     height: 60px;
     overflow: hidden;
+    border-radius: 6px;
+    padding: 2px 4px;
+  }
+
+  .month-grid {
+    gap: 3px;
+    padding: 3px;
+    border-radius: var(--radius-sm);
+  }
+
+  .month-event-pill {
+    font-weight: 500; /* Slimmer text */
+    letter-spacing: -0.3px; /* Tighter letter spacing */
+  }
+
+  .month-event-pill .pill-time {
+    font-weight: 700;
+    letter-spacing: -0.3px;
   }
 
   /* Monthly calendar layout with self-scrolling daily agenda at bottom */

@@ -890,7 +890,8 @@ function renderMonthlyGrid() {
     });
   }
   
-  const nextMonthPadding = 42 - cells.length;
+  const totalCellsNeeded = (firstDayIndex + totalDays <= 35) ? 35 : 42;
+  const nextMonthPadding = totalCellsNeeded - cells.length;
   for (let i = 1; i <= nextMonthPadding; i++) {
     const d = new Date(year, month + 1, i);
     cells.push({
