@@ -1894,3 +1894,97 @@ label {
     gap: 6px;
   }
 }
+
+/* ================= THEME LIGHT OVERRIDES ================= */
+.theme-light {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(241, 245, 249, 0.75);
+  --bg-input: #f1f5f9;
+  
+  --border-light: rgba(0, 0, 0, 0.08);
+  --border-focus: rgba(99, 102, 241, 0.4);
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  
+  --accent-glow: 0 0 20px rgba(99, 102, 241, 0.15);
+  
+  --danger-bg: rgba(239, 68, 68, 0.05);
+  --danger-border: rgba(239, 68, 68, 0.15);
+  
+  --success-bg: rgba(16, 185, 129, 0.05);
+}
+
+.theme-light .app-header {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.theme-light .app-nav {
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.theme-light .logo-text {
+  background: linear-gradient(to right, #000, #475569);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.theme-light .month-grid {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.theme-light .event-card {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.theme-light .details-desc-box {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.theme-light .relevancy-checkboxes-grid {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.theme-light .modal-sheet {
+  background: #ffffff;
+}
+
+.theme-light .invite-box {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+/* ================= RTL LAYOUT OVERRIDES ================= */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .mini-avatar {
+  margin-left: 0;
+  margin-right: -4px;
+}
+
+[dir="rtl"] .mini-avatar:first-child {
+  margin-right: 0;
+}
+
+[dir="rtl"] input[type="email"],
+[dir="rtl"] input[type="password"],
+[dir="rtl"] .invite-code,
+[dir="rtl"] #hub-join-code-active,
+[dir="rtl"] #hub-join-code-empty,
+[dir="rtl"] #event-start-time,
+[dir="rtl"] #event-end-time {
+  direction: ltr;
+  text-align: left;
+}
+
+[dir="rtl"] .header-calendar-nav {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .floating-add-btn {
+  right: auto;
+  left: 16px;
+}

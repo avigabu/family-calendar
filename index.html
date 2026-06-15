@@ -243,7 +243,7 @@
 
         <!-- Monthly Grid View -->
         <div id="monthly-calendar-container" class="calendar-container">
-          <div class="month-days-header">
+          <div class="month-days-header" id="month-days-header">
             <div>Sun</div>
             <div>Mon</div>
             <div>Tue</div>
@@ -364,7 +364,7 @@
       <!-- VIEW 3: SETTINGS VIEW -->
       <section id="view-settings" class="app-section">
         <div class="section-card">
-          <h2>My Profile</h2>
+          <h2 id="settings-title">My Profile</h2>
           <div class="profile-details-card">
             <div class="profile-main-info">
               <div class="profile-big-avatar" id="settings-avatar" style="background-color: #3b82f6;">S</div>
@@ -378,9 +378,40 @@
           <div class="settings-list">
             <div class="settings-item">
               <div class="settings-item-info">
-                <span>Current Family Group</span>
+                <span id="settings-label-family">Current Family Group</span>
                 <span class="settings-item-value" id="settings-family-name">No Family Joined</span>
               </div>
+            </div>
+
+            <div class="settings-item">
+              <div class="settings-item-info" style="flex: 1; margin-right: 12px;">
+                <span id="label-week-start">Start of Week</span>
+              </div>
+              <select id="settings-week-start" onchange="updateUserSetting('weekStart', this.value)" style="width: auto; padding: 6px 12px; font-size: 13px; height: 32px; border-radius: 6px; border: 1px solid var(--border-light); background: var(--bg-input); color: var(--text-primary); cursor: pointer; outline: none;">
+                <option value="sunday" id="opt-sunday">Sunday</option>
+                <option value="monday" id="opt-monday">Monday</option>
+              </select>
+            </div>
+
+            <div class="settings-item">
+              <div class="settings-item-info" style="flex: 1; margin-right: 12px;">
+                <span id="label-language">Language</span>
+              </div>
+              <select id="settings-language" onchange="updateUserSetting('language', this.value)" style="width: auto; padding: 6px 12px; font-size: 13px; height: 32px; border-radius: 6px; border: 1px solid var(--border-light); background: var(--bg-input); color: var(--text-primary); cursor: pointer; outline: none;">
+                <option value="en">English</option>
+                <option value="de">Deutsch</option>
+                <option value="he">עברית</option>
+              </select>
+            </div>
+
+            <div class="settings-item">
+              <div class="settings-item-info" style="flex: 1; margin-right: 12px;">
+                <span id="label-theme">Display Mode</span>
+              </div>
+              <select id="settings-theme" onchange="updateUserSetting('theme', this.value)" style="width: auto; padding: 6px 12px; font-size: 13px; height: 32px; border-radius: 6px; border: 1px solid var(--border-light); background: var(--bg-input); color: var(--text-primary); cursor: pointer; outline: none;">
+                <option value="dark" id="opt-dark">Dark Mode</option>
+                <option value="light" id="opt-light">Light Mode</option>
+              </select>
             </div>
           </div>
 
@@ -388,7 +419,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
             </svg>
-            <span>Log Out</span>
+            <span id="btn-logout-text">Log Out</span>
           </button>
 
           <button id="btn-delete-account" class="btn btn-danger-outline btn-block" onclick="handleDeleteAccount()" style="margin-top: 1rem;">
@@ -398,7 +429,7 @@
               <line x1="10" y1="11" x2="10" y2="17"/>
               <line x1="14" y1="11" x2="14" y2="17"/>
             </svg>
-            <span>Delete Account</span>
+            <span id="btn-delete-account-text">Delete Account</span>
           </button>
         </div>
       </section>
@@ -423,7 +454,7 @@
           <line x1="8" y1="2" x2="8" y2="6"/>
           <line x1="3" y1="10" x2="21" y2="10"/>
         </svg>
-        <span>Calendar</span>
+        <span id="nav-label-calendar">Calendar</span>
       </button>
 
       <button id="nav-btn-family" class="nav-item" onclick="navigateTo('family')">
@@ -433,7 +464,7 @@
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
           <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
-        <span>Family</span>
+        <span id="nav-label-family">Family</span>
       </button>
 
       <button id="nav-btn-settings" class="nav-item" onclick="navigateTo('settings')">
@@ -441,7 +472,7 @@
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
-        <span>Profile</span>
+        <span id="nav-label-settings">Profile</span>
       </button>
     </nav>
   </div>
@@ -464,58 +495,58 @@
         <input type="hidden" id="event-form-id">
         
         <div class="form-group">
-          <label for="event-title">Title</label>
+          <label for="event-title" data-i18n="event_title">Title</label>
           <input type="text" id="event-title" placeholder="e.g. Dinner / Groceries" required>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label for="event-date">Date</label>
+            <label for="event-date" data-i18n="event_date">Date</label>
             <input type="date" id="event-date" required>
           </div>
           <div class="form-group">
-            <label for="event-category">Type</label>
+            <label for="event-category" data-i18n="event_category">Type</label>
             <select id="event-category">
-              <option value="other">Other 🗓️</option>
-              <option value="chore">Chore 🧹</option>
-              <option value="appointment">Appointment 🏥</option>
-              <option value="fun">Fun Activity 🎉</option>
-              <option value="school">School / Education 📚</option>
-              <option value="work">Work 💼</option>
+              <option value="other" data-i18n="cat_other">Other 🗓️</option>
+              <option value="chore" data-i18n="cat_chore">Chore 🧹</option>
+              <option value="appointment" data-i18n="cat_appointment">Appointment 🏥</option>
+              <option value="fun" data-i18n="cat_fun">Fun Activity 🎉</option>
+              <option value="school" data-i18n="cat_school">School / Education 📚</option>
+              <option value="work" data-i18n="cat_work">Work 💼</option>
             </select>
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label for="event-start-time">Starts</label>
+            <label for="event-start-time" data-i18n="event_starts">Starts</label>
             <input type="time" id="event-start-time" required>
           </div>
           <div class="form-group">
-            <label for="event-end-time">Ends</label>
+            <label for="event-end-time" data-i18n="event_ends">Ends</label>
             <input type="time" id="event-end-time" required>
           </div>
         </div>
 
         <div class="form-group">
-          <label for="event-description">Description</label>
+          <label for="event-description" data-i18n="event_description">Description</label>
           <textarea id="event-description" placeholder="Optional notes..."></textarea>
         </div>
 
         <!-- RELEVANCY ASSIGNMENT (THE KEY REQUIREMENT) -->
         <div class="form-group">
-          <label>Who is this relevant to?</label>
-          <p class="field-help-text">Select which family members will see this event on their calendar.</p>
+          <label data-i18n="event_relevancy_label">Who is this relevant to?</label>
+          <p class="field-help-text" data-i18n="event_relevancy_desc">Select which family members will see this event on their calendar.</p>
           <div class="relevancy-checkboxes-grid" id="event-relevancy-list">
             <!-- Populated dynamically with family members -->
           </div>
         </div>
 
         <div class="modal-actions">
-          <button type="button" id="btn-delete-event" class="btn btn-danger-outline btn-modal" onclick="handleDeleteEvent()" style="display: none;">
+          <button type="button" id="btn-delete-event" class="btn btn-danger-outline btn-modal" onclick="handleDeleteEvent()" style="display: none;" data-i18n="delete_event">
             Delete Event
           </button>
-          <button type="submit" class="btn btn-primary btn-modal">
+          <button type="submit" class="btn btn-primary btn-modal" id="btn-submit-event" data-i18n="save_event">
             Save Event
           </button>
         </div>
@@ -556,7 +587,7 @@
         </div>
 
         <div class="details-section">
-          <span class="details-section-label">Created By:</span>
+          <span class="details-section-label" data-i18n="created_by">Created By:</span>
           <div class="creator-badge">
             <span class="avatar-dot" id="details-creator-dot"></span>
             <span id="details-creator-name">John</span>
@@ -564,7 +595,7 @@
         </div>
 
         <div class="details-section">
-          <span class="details-section-label">Visible to:</span>
+          <span class="details-section-label" data-i18n="visible_to">Visible to:</span>
           <div class="details-members-tags" id="details-members-tags">
             <!-- Dynamically populated avatar tags -->
           </div>
@@ -575,7 +606,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
               <path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
             </svg>
-            <span>Edit Event</span>
+            <span data-i18n="edit_event">Edit Event</span>
           </button>
         </div>
       </div>

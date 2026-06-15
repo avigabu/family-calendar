@@ -13,6 +13,309 @@ let calendarMode = 'month';  // 'month' | 'week'
 let currentDate = new Date(); // Anchor date for calendar grid calculations
 let selectedDay = new Date().toISOString().split('T')[0]; // For daily list in monthly view
 
+// ================= INTERNATIONALIZATION & THEME SETTINGS =================
+const TRANSLATIONS = {
+  en: {
+    calendar: "Calendar",
+    family: "Family",
+    settings: "Profile",
+    today: "Today",
+    month: "Month",
+    week: "Week",
+    my_profile: "My Profile",
+    current_family_group: "Current Family Group",
+    no_family_joined: "No Family Joined",
+    start_of_week: "Start of Week",
+    language: "Language",
+    display_mode: "Display Mode",
+    log_out: "Log Out",
+    delete_account: "Delete Account",
+    sunday: "Sunday",
+    monday: "Monday",
+    dark_mode: "Dark Mode",
+    light_mode: "Light Mode",
+    sunday_short: "Sun",
+    monday_short: "Mon",
+    tuesday_short: "Tue",
+    wednesday_short: "Wed",
+    thursday_short: "Thu",
+    friday_short: "Fri",
+    saturday_short: "Sat",
+    january: "January",
+    february: "February",
+    march: "March",
+    april: "April",
+    may: "May",
+    june: "June",
+    july: "July",
+    august: "August",
+    september: "September",
+    october: "October",
+    november: "November",
+    december: "December",
+    january_short: "Jan",
+    february_short: "Feb",
+    march_short: "Mar",
+    april_short: "Apr",
+    may_short: "May",
+    june_short: "Jun",
+    july_short: "Jul",
+    august_short: "Aug",
+    september_short: "Sep",
+    october_short: "Okt",
+    november_short: "Nov",
+    december_short: "Dec",
+    no_events_scheduled: "No events scheduled.",
+    more_events: "+{count} more",
+    confirm_delete_event: "Are you sure you want to delete this event?",
+    confirm_delete_account: "WARNING: This will permanently delete your account, your profile, and remove you from all family groups. This action cannot be undone.\n\nAre you sure you want to proceed?",
+    created_by: "Created By:",
+    visible_to: "Visible to:",
+    edit_event: "Edit Event",
+    no_description: "No description provided.",
+    event_title: "Title",
+    event_date: "Date",
+    event_category: "Type",
+    event_starts: "Starts",
+    event_ends: "Ends",
+    event_description: "Description",
+    event_relevancy_label: "Who is this relevant to?",
+    event_relevancy_desc: "Select which family members will see this event on their calendar.",
+    save_event: "Save Event",
+    delete_event: "Delete Event",
+    cat_other: "Other 🗓️",
+    cat_chore: "Chore 🧹",
+    cat_appointment: "Appointment 🏥",
+    cat_fun: "Fun Activity 🎉",
+    cat_school: "School / Education 📚",
+    cat_work: "Work 💼"
+  },
+  de: {
+    calendar: "Kalender",
+    family: "Familie",
+    settings: "Profil",
+    today: "Heute",
+    month: "Monat",
+    week: "Woche",
+    my_profile: "Mein Profil",
+    current_family_group: "Aktuelle Familiengruppe",
+    no_family_joined: "Keiner Familie beigetreten",
+    start_of_week: "Wochenbeginn",
+    language: "Sprache",
+    display_mode: "Anzeigemodus",
+    log_out: "Abmelden",
+    delete_account: "Konto löschen",
+    sunday: "Sonntag",
+    monday: "Montag",
+    dark_mode: "Dunkler Modus",
+    light_mode: "Heller Modus",
+    sunday_short: "So",
+    monday_short: "Mo",
+    tuesday_short: "Di",
+    wednesday_short: "Mi",
+    thursday_short: "Do",
+    friday_short: "Fr",
+    saturday_short: "Sa",
+    january: "Januar",
+    february: "Februar",
+    march: "März",
+    april: "April",
+    may: "Mai",
+    june: "Juni",
+    july: "Juli",
+    august: "August",
+    september: "September",
+    october: "Oktober",
+    november: "November",
+    december: "Dezember",
+    january_short: "Jan",
+    february_short: "Feb",
+    march_short: "Mär",
+    april_short: "Apr",
+    may_short: "Mai",
+    june_short: "Jun",
+    july_short: "Jul",
+    august_short: "Aug",
+    september_short: "Sep",
+    october_short: "Okt",
+    november_short: "Nov",
+    december_short: "Dez",
+    no_events_scheduled: "Keine Termine geplant.",
+    more_events: "+{count} weitere",
+    confirm_delete_event: "Möchtest du diesen Termin wirklich löschen?",
+    confirm_delete_account: "WARNUNG: Dies wird Ihr Konto und Ihr Profil dauerhaft löschen und Sie aus allen Familiengruppen entfernen. Diese Aktion kann nicht rückgängig gemacht werden.\n\nMöchten Sie wirklich fortfahren?",
+    created_by: "Erstellt von:",
+    visible_to: "Sichtbar für:",
+    edit_event: "Termin bearbeiten",
+    no_description: "Keine Beschreibung vorhanden.",
+    event_title: "Titel",
+    event_date: "Datum",
+    event_category: "Typ",
+    event_starts: "Beginnt",
+    event_ends: "Endet",
+    event_description: "Beschreibung",
+    event_relevancy_label: "Für wen ist das relevant?",
+    event_relevancy_desc: "Wähle aus, welche Familienmitglieder diesen Termin in ihrem Kalender sehen.",
+    save_event: "Termin speichern",
+    delete_event: "Termin löschen",
+    cat_other: "Sonstiges 🗓️",
+    cat_chore: "Aufgabe 🧹",
+    cat_appointment: "Termin 🏥",
+    cat_fun: "Freizeit 🎉",
+    cat_school: "Schule / Bildung 📚",
+    cat_work: "Arbeit 💼"
+  },
+  he: {
+    calendar: "לוח שנה",
+    family: "משפחה",
+    settings: "פרופיל",
+    today: "היום",
+    month: "חודש",
+    week: "שבוע",
+    my_profile: "הפרופיל שלי",
+    current_family_group: "קבוצה משפחתית",
+    no_family_joined: "לא הצטרפת למשפחה",
+    start_of_week: "תחילת השבוע",
+    language: "שפה",
+    display_mode: "מצב תצוגה",
+    log_out: "התנתק",
+    delete_account: "מחק חשבון",
+    sunday: "יום ראשון",
+    monday: "יום שני",
+    dark_mode: "מצב כהה",
+    light_mode: "מצב בהיר",
+    sunday_short: "א'",
+    monday_short: "ב'",
+    tuesday_short: "ג'",
+    wednesday_short: "ד'",
+    thursday_short: "ה'",
+    friday_short: "ו'",
+    saturday_short: "ש'",
+    january: "ינואר",
+    february: "פברואר",
+    march: "מרץ",
+    april: "אפריל",
+    may: "מאי",
+    june: "יוני",
+    july: "יולי",
+    august: "אוגוסט",
+    september: "ספטמבר",
+    october: "אוקטובר",
+    november: "נובמבר",
+    december: "דצמבר",
+    january_short: "ינו׳",
+    february_short: "פבר׳",
+    march_short: "מרץ",
+    april_short: "אפר׳",
+    may_short: "מאי",
+    june_short: "יוני",
+    july_short: "יולי",
+    august_short: "אוג׳",
+    september_short: "ספט׳",
+    october_short: "אוק׳",
+    november_short: "נוב׳",
+    december_short: "דצמ׳",
+    no_events_scheduled: "אין אירועים מתוכננים.",
+    more_events: "עוד +{count}",
+    confirm_delete_event: "האם אתה בטוח שברצונך למחוק אירוע זה?",
+    confirm_delete_account: "אזהרה: פעולה זו תמחק לצמיתות את החשבון והפרופיל שלך ותסיר אותך מכל הקבוצות המשפחתיות. לא ניתן לבטל פעולה זו.\n\nהאם אתה בטוח שברצונך להמשיך?",
+    created_by: "נוצר על ידי:",
+    visible_to: "גלוי עבור:",
+    edit_event: "ערוך אירוע",
+    no_description: "לא צוין תיאור.",
+    event_title: "כותרת",
+    event_date: "תאריך",
+    event_category: "סוג",
+    event_starts: "התחלה",
+    event_ends: "סיום",
+    event_description: "תיאור",
+    event_relevancy_label: "עבור מי האירוע?",
+    event_relevancy_desc: "בחר אילו בני משפחה יראו את האירוע בלוח השנה שלהם.",
+    save_event: "שמור אירוע",
+    delete_event: "מחק אירוע",
+    cat_other: "אחר 🗓️",
+    cat_chore: "מטלה 🧹",
+    cat_appointment: "תור 🏥",
+    cat_fun: "פעילות מהנה 🎉",
+    cat_school: "בית ספר / לימודים 📚",
+    cat_work: "עבודה 💼"
+  }
+};
+
+function t(key, count = null) {
+  const lang = userProfile?.settings?.language || 'en';
+  let str = TRANSLATIONS[lang]?.[key] || TRANSLATIONS['en']?.[key] || key;
+  if (count !== null) {
+    str = str.replace('{count}', count);
+  }
+  return str;
+}
+
+async function updateUserSetting(key, value) {
+  if (!currentUser) return;
+  if (!userProfile) userProfile = {};
+  if (!userProfile.settings) userProfile.settings = {};
+  
+  userProfile.settings[key] = value;
+  
+  try {
+    showToast('Updating settings...', 'info');
+    await dbFirestore.collection("users").doc(currentUser.uid).update({
+      settings: userProfile.settings
+    });
+    applyUserSettings();
+  } catch (err) {
+    console.error("Failed to save setting:", err);
+    showToast("Failed to save setting: " + err.message, "error");
+  }
+}
+
+function applyUserSettings() {
+  if (!userProfile) return;
+  
+  const settings = userProfile.settings || {};
+  const theme = settings.theme || 'dark';
+  const lang = settings.language || 'en';
+  const weekStart = settings.weekStart || 'sunday';
+  
+  // 1. Theme toggle
+  if (theme === 'light') {
+    document.documentElement.classList.add('theme-light');
+  } else {
+    document.documentElement.classList.remove('theme-light');
+  }
+  
+  // 2. Sync Settings select dropdowns
+  const selectTheme = document.getElementById('settings-theme');
+  if (selectTheme) selectTheme.value = theme;
+  
+  const selectLang = document.getElementById('settings-language');
+  if (selectLang) selectLang.value = lang;
+  
+  const selectWeek = document.getElementById('settings-week-start');
+  if (selectWeek) selectWeek.value = weekStart;
+  
+  // 3. Apply translations
+  applyLanguageUI();
+}
+
+function applyLanguageUI() {
+  const lang = userProfile?.settings?.language || 'en';
+  
+  // Set reading direction for RTL (Hebrew)
+  if (lang === 'he') {
+    document.documentElement.dir = 'rtl';
+  } else {
+    document.documentElement.dir = 'ltr';
+  }
+  
+  // Translate static UI elements marked with data-i18n
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    el.innerText = t(key);
+  });
+}
+
 // Color palette for automatic member colors
 const PALETTE_COLORS = [
   '#3b82f6', // Blue
@@ -103,7 +406,12 @@ document.addEventListener('DOMContentLoaded', () => {
               name: user.displayName || "Family Member",
               email: user.email,
               color: PALETTE_COLORS[0],
-              families: []
+              families: [],
+              settings: {
+                weekStart: 'sunday',
+                language: 'en',
+                theme: 'dark'
+              }
             };
             try {
               await dbFirestore.collection("users").doc(user.uid).set(userProfileData);
@@ -119,6 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         userProfile = doc.data();
+        applyUserSettings();
         await loadUserFamilies();
       }, err => {
         console.error("Profile load failed:", err);
@@ -425,7 +734,12 @@ async function handleRegister(e) {
       name,
       email,
       color: PALETTE_COLORS[0], // Default placeholder, will be updated if joining
-      families: []
+      families: [],
+      settings: {
+        weekStart: 'sunday',
+        language: 'en',
+        theme: 'dark'
+      }
     };
     
     let createdFamilyId = null;
@@ -533,7 +847,7 @@ async function handleGoogleSignIn() {
 async function handleDeleteAccount() {
   if (!currentUser || !userProfile) return;
   
-  const confirmation = confirm("WARNING: This will permanently delete your account, your profile, and remove you from all family groups. Any events you created will also be deleted. This action cannot be undone.\n\nAre you sure you want to proceed?");
+  const confirmation = confirm(t('confirm_delete_account'));
   
   if (!confirmation) return;
   
@@ -888,13 +1202,33 @@ function renderMonthlyGrid() {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   
-  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const titleText = `${monthNames[month]} ${year}`;
+  const monthKeys = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+  const titleText = `${t(monthKeys[month])} ${year}`;
   document.getElementById('calendar-title').innerText = titleText;
   const headerTitle = document.getElementById('header-calendar-title');
   if (headerTitle) headerTitle.innerText = titleText;
   
-  const firstDayIndex = new Date(year, month, 1).getDay();
+  const weekStart = userProfile?.settings?.weekStart || 'sunday';
+  
+  // Render weekday headers dynamically
+  const headerContainer = document.getElementById('month-days-header');
+  if (headerContainer) {
+    headerContainer.innerHTML = '';
+    const dayKeys = (weekStart === 'monday') 
+      ? ['monday_short', 'tuesday_short', 'wednesday_short', 'thursday_short', 'friday_short', 'saturday_short', 'sunday_short']
+      : ['sunday_short', 'monday_short', 'tuesday_short', 'wednesday_short', 'thursday_short', 'friday_short', 'saturday_short'];
+    
+    dayKeys.forEach(k => {
+      const div = document.createElement('div');
+      div.innerText = t(k);
+      headerContainer.appendChild(div);
+    });
+  }
+
+  let firstDayIndex = new Date(year, month, 1).getDay();
+  if (weekStart === 'monday') {
+    firstDayIndex = (firstDayIndex + 6) % 7;
+  }
   const totalDays = new Date(year, month + 1, 0).getDate();
   const prevMonthTotalDays = new Date(year, month, 0).getDate();
   
@@ -937,11 +1271,7 @@ function renderMonthlyGrid() {
     const isSelected = cellDateStr === selectedDay;
     
     const div = document.createElement('div');
-    div.className = `month-day ${cell.isCurrentMonth ? '' : 'other-month'} ${isToday ? 'today' : ''}`;
-    if (isSelected) {
-      div.style.borderColor = 'var(--accent-primary)';
-      div.style.backgroundColor = 'rgba(99, 102, 241, 0.08)';
-    }
+    div.className = `month-day ${cell.isCurrentMonth ? '' : 'other-month'} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}`;
     
     div.onclick = () => selectDayInMonth(cellDateStr);
     
@@ -971,7 +1301,7 @@ function renderMonthlyGrid() {
       `;
     });
     if (dayEvents.length > 3) {
-      pillsHtml += `<div class="month-event-more">+${dayEvents.length - 3} more</div>`;
+      pillsHtml += `<div class="month-event-more">${t('more_events', dayEvents.length - 3)}</div>`;
     }
     
     div.innerHTML = `
@@ -1065,14 +1395,21 @@ function renderWeeklyLayout() {
   grid.innerHTML = '';
   
   const anchor = new Date(currentDate);
-  const diff = anchor.getDate() - anchor.getDay();
-  const sunday = new Date(anchor.setDate(diff));
+  const weekStart = userProfile?.settings?.weekStart || 'sunday';
+  let diff = anchor.getDate() - anchor.getDay();
+  if (weekStart === 'monday') {
+    const day = anchor.getDay();
+    diff = anchor.getDate() - (day === 0 ? 6 : day - 1);
+  }
+  const startDay = new Date(anchor.setDate(diff));
   
-  const endOfWeek = new Date(sunday);
-  endOfWeek.setDate(sunday.getDate() + 6);
+  const endOfWeek = new Date(startDay);
+  endOfWeek.setDate(startDay.getDate() + 6);
   
+  const lang = userProfile?.settings?.language || 'en';
+  const locale = lang === 'he' ? 'he-IL' : (lang === 'de' ? 'de-DE' : 'en-US');
   const options = { month: 'short', day: 'numeric' };
-  const titleText = `${sunday.toLocaleDateString('en-US', options)} - ${endOfWeek.toLocaleDateString('en-US', options)}, ${endOfWeek.getFullYear()}`;
+  const titleText = `${startDay.toLocaleDateString(locale, options)} - ${endOfWeek.toLocaleDateString(locale, options)}, ${endOfWeek.getFullYear()}`;
   document.getElementById('calendar-title').innerText = titleText;
   const headerTitle = document.getElementById('header-calendar-title');
   if (headerTitle) headerTitle.innerText = titleText;
@@ -1080,12 +1417,12 @@ function renderWeeklyLayout() {
   const todayStr = new Date().toISOString().split('T')[0];
   
   for (let i = 0; i < 7; i++) {
-    const dayDate = new Date(sunday);
-    dayDate.setDate(sunday.getDate() + i);
+    const dayDate = new Date(startDay);
+    dayDate.setDate(startDay.getDate() + i);
     const dayDateStr = dayDate.toISOString().split('T')[0];
     const isToday = dayDateStr === todayStr;
     
-    const dayName = dayDate.toLocaleDateString('en-US', { weekday: 'short' });
+    const dayName = dayDate.toLocaleDateString(locale, { weekday: 'short' });
     const dayNum = dayDate.getDate();
     
     const dayRow = document.createElement('div');
@@ -1095,7 +1432,7 @@ function renderWeeklyLayout() {
     
     let eventsHtml = '';
     if (dayEvents.length === 0) {
-      eventsHtml = `<p class="empty-day-message">No events scheduled.</p>`;
+      eventsHtml = `<p class="empty-day-message">${t('no_events_scheduled')}</p>`;
     } else {
       dayEvents.forEach(evt => {
         const creator = familyMembers.find(m => m.id === evt.createdBy);
@@ -1203,7 +1540,7 @@ function openEventModal(eventToEdit = null) {
   });
   
   if (eventToEdit) {
-    actionTitle.innerText = 'Edit Event';
+    actionTitle.innerText = t('edit_event');
     btnDelete.style.display = 'block';
     
     document.getElementById('event-form-id').value = eventToEdit.id;
@@ -1214,7 +1551,7 @@ function openEventModal(eventToEdit = null) {
     document.getElementById('event-category').value = eventToEdit.category;
     document.getElementById('event-description').value = eventToEdit.description || '';
   } else {
-    actionTitle.innerText = 'New Event';
+    actionTitle.innerText = t('new_event');
     btnDelete.style.display = 'none';
     document.getElementById('event-form-id').value = '';
     document.getElementById('event-date').value = selectedDay;
@@ -1288,7 +1625,7 @@ async function handleDeleteEvent() {
   const id = document.getElementById('event-form-id').value;
   if (!id) return;
   
-  if (!confirm('Are you sure you want to delete this event?')) return;
+  if (!confirm(t('confirm_delete_event'))) return;
   
   try {
     await dbFirestore.collection("events").doc(id).delete();
@@ -1313,14 +1650,14 @@ function openDetailsModal(eventId) {
   
   const categoryBadge = document.getElementById('details-category-badge');
   const categoriesMap = {
-    chore: 'Chore 🧹',
-    appointment: 'Appointment 🏥',
-    fun: 'Fun Activity 🎉',
-    school: 'School / Ed 📚',
-    work: 'Work 💼',
-    other: 'Other 🗓️'
+    chore: t('cat_chore'),
+    appointment: t('cat_appointment'),
+    fun: t('cat_fun'),
+    school: t('cat_school'),
+    work: t('cat_work'),
+    other: t('cat_other')
   };
-  categoryBadge.innerText = categoriesMap[event.category] || 'Other 🗓️';
+  categoryBadge.innerText = categoriesMap[event.category] || t('cat_other');
   
   document.getElementById('details-title').innerText = event.title;
   const descBox = document.getElementById('details-desc-box');
@@ -1334,7 +1671,9 @@ function openDetailsModal(eventId) {
   
   const dateObj = new Date(event.date);
   const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  document.getElementById('details-date-text').innerText = dateObj.toLocaleDateString('en-US', options);
+  const lang = userProfile?.settings?.language || 'en';
+  const locale = lang === 'he' ? 'he-IL' : (lang === 'de' ? 'de-DE' : 'en-US');
+  document.getElementById('details-date-text').innerText = dateObj.toLocaleDateString(locale, options);
   document.getElementById('details-time-text').innerText = `${event.startTime} - ${event.endTime}`;
   
   const creator = familyMembers.find(m => m.id === event.createdBy);
