@@ -625,15 +625,16 @@ label {
 }
 
 .month-day {
-  aspect-ratio: 1;
+  aspect-ratio: auto;
+  min-height: 80px;
   background: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: 12px;
-  padding: 6px;
+  border-radius: 10px;
+  padding: 4px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  position: relative;
+  justify-content: flex-start;
+  align-items: stretch;
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -644,7 +645,7 @@ label {
 }
 
 .month-day:active {
-  transform: scale(0.94);
+  transform: scale(0.96);
 }
 
 .month-day.other-month {
@@ -657,70 +658,65 @@ label {
 }
 
 .day-number {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
+  color: var(--text-secondary);
 }
 
 .month-day.today .day-number {
   color: white;
   background: var(--accent-gradient);
   display: inline-flex;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
+  font-size: 10px;
 }
 
 .day-events-indicator {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-  justify-content: center;
-  margin-top: auto;
+  display: none !important; /* Hide dots completely since we show text pills */
 }
 
 .event-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background-color: var(--event-color, var(--accent-primary));
+  display: none !important;
 }
 
-/* Desktop Month View Event Pills */
 .day-events-pills {
-  display: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+  overflow: hidden;
 }
 
 .month-event-pill {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  padding: 3px 6px;
-  border-radius: 6px;
-  background: var(--event-color, var(--accent-primary));
-  color: white;
+  font-size: 9px;
+  padding: 1px 0;
+  background: transparent;
+  color: var(--event-color, var(--accent-primary));
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 500;
-  border-left: 3px solid rgba(0, 0, 0, 0.3);
-  transition: transform 0.15s ease;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
 }
 
 .month-event-pill:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.1);
+  filter: brightness(1.2);
 }
 
 .month-event-pill .pill-time {
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 8px;
+  color: var(--event-color, var(--accent-primary));
   opacity: 0.85;
-  font-size: 9px;
-  background: rgba(0, 0, 0, 0.15);
-  padding: 1px 3px;
-  border-radius: 3px;
+  margin-right: 3px;
+  flex-shrink: 0;
 }
 
 .month-event-pill .pill-title {
@@ -730,11 +726,10 @@ label {
 }
 
 .month-event-more {
-  font-size: 10px;
+  font-size: 8px;
   color: var(--text-secondary);
   font-weight: 700;
-  padding-left: 6px;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 /* Weekly calendar */
@@ -1603,21 +1598,37 @@ label {
   }
 
   .month-day {
-    aspect-ratio: auto;
-    min-height: 110px; /* Rectangular shaped days for event listings */
-    justify-content: flex-start;
-    align-items: stretch;
+    min-height: 120px; /* Even taller on desktop for more text space */
+    padding: 6px;
   }
 
-  .day-events-indicator {
-    display: none; /* Hide dots on large screens */
+  .day-number {
+    font-size: 12px;
+  }
+
+  .month-day.today .day-number {
+    width: 22px;
+    height: 22px;
+    font-size: 11px;
   }
 
   .day-events-pills {
-    display: flex;
-    flex-direction: column;
     gap: 4px;
     margin-top: 6px;
-    overflow: hidden;
+  }
+
+  .month-event-pill {
+    font-size: 11px;
+    padding: 2px 0;
+  }
+
+  .month-event-pill .pill-time {
+    font-size: 9px;
+    margin-right: 4px;
+  }
+
+  .month-event-more {
+    font-size: 10px;
+    margin-top: 2px;
   }
 }
