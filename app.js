@@ -924,9 +924,28 @@ function renderMonthlyGrid() {
       dotsHtml += `<span class="event-dot" style="--event-color: #ffffff; opacity: 0.8"></span>`;
     }
     
+    // Create text pills for desktop view
+    let pillsHtml = '';
+    dayEvents.slice(0, 3).forEach(evt => {
+      const creator = familyMembers.find(m => m.id === evt.createdBy);
+      const color = creator ? creator.color : 'var(--accent-primary)';
+      pillsHtml += `
+        <div class="month-event-pill" style="--event-color: ${color}" title="${escapeHtml(evt.title)}">
+          <span class="pill-time">${evt.startTime}</span>
+          <span class="pill-title">${escapeHtml(evt.title)}</span>
+        </div>
+      `;
+    });
+    if (dayEvents.length > 3) {
+      pillsHtml += `<div class="month-event-more">+${dayEvents.length - 3} more</div>`;
+    }
+    
     div.innerHTML = `
-      <span class="day-number">${cell.dayNum}</span>
+      <div class="day-header-row">
+        <span class="day-number">${cell.dayNum}</span>
+      </div>
       <div class="day-events-indicator">${dotsHtml}</div>
+      <div class="day-events-pills">${pillsHtml}</div>
     `;
     
     grid.appendChild(div);

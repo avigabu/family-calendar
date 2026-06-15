@@ -687,6 +687,56 @@ label {
   background-color: var(--event-color, var(--accent-primary));
 }
 
+/* Desktop Month View Event Pills */
+.day-events-pills {
+  display: none;
+}
+
+.month-event-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: var(--event-color, var(--accent-primary));
+  color: white;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  border-left: 3px solid rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease;
+}
+
+.month-event-pill:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+.month-event-pill .pill-time {
+  font-weight: 700;
+  opacity: 0.85;
+  font-size: 9px;
+  background: rgba(0, 0, 0, 0.15);
+  padding: 1px 3px;
+  border-radius: 3px;
+}
+
+.month-event-pill .pill-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.month-event-more {
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-weight: 700;
+  padding-left: 6px;
+  margin-top: 2px;
+}
+
 /* Weekly calendar */
 .week-grid {
   display: flex;
@@ -1538,4 +1588,36 @@ label {
 
 .password-toggle-btn:hover {
   color: var(--text-primary);
+}
+
+/* ================= TABLET & DESKTOP WIDE LAYOUT ================= */
+@media (min-width: 800px) {
+  :root {
+    --max-width: 1200px; /* Expand screen space for layout on desktop/tablets */
+  }
+
+  .app-container {
+    height: 900px;
+    max-height: calc(100vh - 40px);
+    max-height: calc(100dvh - 40px);
+  }
+
+  .month-day {
+    aspect-ratio: auto;
+    min-height: 110px; /* Rectangular shaped days for event listings */
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+
+  .day-events-indicator {
+    display: none; /* Hide dots on large screens */
+  }
+
+  .day-events-pills {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
 }
