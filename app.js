@@ -1491,6 +1491,7 @@ function setupSwipeGestures() {
   
   const bindGrid = (gridEl) => {
     if (!gridEl) return;
+    const isWeekly = gridEl.id === 'weekly-grid';
     
     gridEl.addEventListener('touchstart', (e) => {
       if (e.touches.length !== 1) return;
@@ -1507,9 +1508,17 @@ function setupSwipeGestures() {
       const diffX = curX - touchStartX;
       const diffY = curY - touchStartY;
       
-      // Prevent browser default scroll if the movement is a clear swipe
-      if (Math.abs(diffX) > 10 || Math.abs(diffY) > 10) {
-        if (e.cancelable) e.preventDefault();
+      if (isWeekly) {
+        // In week view, only prevent browser default scroll for horizontal swipes (view toggling)
+        // Allow vertical swipes so the user can scroll through their meetings list naturally
+        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+          if (e.cancelable) e.preventDefault();
+        }
+      } else {
+        // In month view, prevent default browser scroll for both horizontal and vertical swipes
+        if (Math.abs(diffX) > 10 || Math.abs(diffY) > 10) {
+          if (e.cancelable) e.preventDefault();
+        }
       }
     }, { passive: false });
     
@@ -1554,13 +1563,14 @@ function handleSwipeGesture() {
       }
     }
   } else {
-    // Vertical swipe -> Navigation (Prev / Next Month or Week)
-    if (Math.abs(diffY) > threshold) {
+    // Vertical swipe -> Navigation (Prev / Next Month only)
+    // We only navigate vertically in Month view. In Week view, vertical swipe is reserved for scrolling meetings list.
+    if (calendarMode === 'month' && Math.abs(diffY) > threshold) {
       if (diffY > 0) {
-        // Swipe Down -> Prev Month / Week
+        // Swipe Down -> Prev Month
         changeDateRange(-1);
       } else {
-        // Swipe Up -> Next Month / Week
+        // Swipe Up -> Next Month
         changeDateRange(1);
       }
     }

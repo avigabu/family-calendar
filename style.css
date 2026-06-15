@@ -1640,7 +1640,8 @@ label {
   }
 
   .month-day {
-    min-height: 120px; /* Even taller on desktop for more text space */
+    height: 120px; /* Force uniform fixed height on desktop */
+    overflow: hidden;
     padding: 6px;
   }
 
@@ -1749,14 +1750,20 @@ label {
     display: none !important;
   }
 
-  /* Disable default scroll gestures on calendar grids to prevent conflict */
-  #monthly-grid, #weekly-grid {
+  /* Disable default scroll gestures on monthly grid to prevent conflict */
+  #monthly-grid {
     touch-action: none;
   }
 
-  /* Compact day cells on mobile to fit screen */
+  /* Allow vertical scroll gesture on weekly grid */
+  #weekly-grid {
+    touch-action: pan-y;
+  }
+
+  /* Uniform day cells on mobile to fit screen exactly */
   .month-day {
-    min-height: 55px;
+    height: 60px;
+    overflow: hidden;
   }
 
   /* Monthly calendar layout with self-scrolling daily agenda at bottom */
@@ -1776,31 +1783,34 @@ label {
     margin-bottom: 0;
   }
 
-  /* Weekly view stretches the 7 days to fit screen height */
+  /* Weekly view scrolls vertically to show all events */
   #weekly-calendar-container {
     flex: 1;
     min-height: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
+    overflow-y: auto;
+    display: block;
+    touch-action: pan-y;
   }
 
   .week-grid {
-    height: 100%;
+    height: auto;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 12px;
   }
 
   .week-day-row {
     display: flex;
     flex-direction: row;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    padding: 6px 12px;
-    flex: 1;
-    min-height: 0;
-    gap: 12px;
+    padding: 10px 14px;
+    flex: none;
+    min-height: auto;
+    gap: 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
   }
 
   .week-day-header {
@@ -1816,10 +1826,10 @@ label {
 
   .week-events-list {
     flex: 1;
-    overflow-y: auto;
-    max-height: 100%;
+    overflow-y: visible;
+    max-height: none;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
   }
 }
