@@ -985,7 +985,7 @@ async function handleDeleteAccount() {
     const uid = currentUser.uid;
     const joinedFamilies = [...(userProfile.families || [])];
     
-    // 1. Delete events created by the user, and remove user from relevantTo arrays of other events (DO THIS FIRST while user is still in the family)
+    // 1. Delete events created by the user if only relevant to them, and update if relevant to others
     if (joinedFamilies.length > 0) {
       const eventsSnap = await dbFirestore.collection("events")
         .where("familyId", "in", joinedFamilies)
@@ -995,7 +995,14 @@ async function handleDeleteAccount() {
       eventsSnap.forEach(doc => {
         const eventData = doc.data();
         if (eventData.createdBy === uid) {
-          batch.delete(doc.ref);
+          const otherRelevant = (eventData.relevantTo || []).filter(id => id !== uid);
+          if (otherRelevant.length > 0) {
+            // Keep the event since it's relevant to others, just remove the deleting user from relevantTo
+            batch.update(doc.ref, { relevantTo: otherRelevant });
+          } else {
+            // Delete the event since it's only relevant to the deleting user
+            batch.delete(doc.ref);
+          }
         } else if (Array.isArray(eventData.relevantTo) && eventData.relevantTo.includes(uid)) {
           const updatedRelevant = eventData.relevantTo.filter(id => id !== uid);
           batch.update(doc.ref, { relevantTo: updatedRelevant });

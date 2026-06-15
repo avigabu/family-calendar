@@ -1991,6 +1991,13 @@ label {
 }
 
 
+[dir="rtl"] .header-calendar-nav,
+[dir="rtl"] .calendar-nav {
+  direction: ltr !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+}
+
 [dir="rtl"] .floating-add-btn {
   right: auto;
   left: 16px;
