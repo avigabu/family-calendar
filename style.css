@@ -461,6 +461,12 @@ label {
   white-space: nowrap;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .header-profile {
   cursor: pointer;
   transition: transform 0.2s ease;
@@ -1602,33 +1608,19 @@ label {
     max-height: calc(100dvh - 40px);
   }
 
-  /* Restore and style calendar controls for desktop */
-  .calendar-controls {
-    display: flex;
-    flex-direction: row;
-    gap: 8px;
-    margin-bottom: 8px;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .calendar-nav {
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    padding: 4px 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex: 1.1;
-  }
-
-  .calendar-nav .btn-icon {
+  /* Show header calendar nav on desktop Calendar view */
+  .header-calendar-nav {
     display: flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
   }
 
-  .calendar-title {
-    font-size: 13px;
-    font-weight: 700;
+  .header-calendar-title-text {
+    font-size: 15px !important;
   }
 
   .calendar-modes {
@@ -2026,12 +2018,6 @@ label {
   text-align: left;
 }
 
-
-[dir="rtl"] .header-calendar-nav,
-[dir="rtl"] .calendar-nav {
-  direction: ltr !important;
-  flex-direction: row !important;
-}
 
 [dir="rtl"] .floating-add-btn {
   right: auto;

@@ -670,7 +670,7 @@ function updateFamilySwitcherUI() {
   const select = document.getElementById('header-family-select');
   
   if (userFamilies.length > 0) {
-    if (activeView === 'calendar' && window.innerWidth < 800) {
+    if (activeView === 'calendar') {
       container.style.setProperty('display', 'none', 'important');
     } else {
       container.style.display = 'block';
@@ -1147,23 +1147,25 @@ function navigateTo(view) {
   const headerCalNav = document.getElementById('header-calendar-nav');
   const headerTodayBtn = document.getElementById('header-btn-today');
   const headerFamilyBadge = document.getElementById('header-family-badge');
+  const headerCalModes = document.querySelector('.header-actions .calendar-modes');
   
   if (view === 'calendar') {
     if (headerCalNav) headerCalNav.style.display = ''; // let CSS display rule apply
     if (headerTodayBtn) headerTodayBtn.style.display = ''; // let CSS display rule apply
     if (headerFamilyBadge) {
-      // Hide family selector on mobile only to prevent overlap with calendar nav
-      if (window.innerWidth < 800) {
-        headerFamilyBadge.style.setProperty('display', 'none', 'important');
-      } else {
-        headerFamilyBadge.style.display = userFamilies.length > 0 ? 'block' : 'none';
-      }
+      headerFamilyBadge.style.setProperty('display', 'none', 'important');
+    }
+    if (headerCalModes) {
+      headerCalModes.style.display = ''; // let CSS media query display rules apply
     }
   } else {
     if (headerCalNav) headerCalNav.style.setProperty('display', 'none', 'important');
     if (headerTodayBtn) headerTodayBtn.style.setProperty('display', 'none', 'important');
     if (headerFamilyBadge) {
       headerFamilyBadge.style.display = userFamilies.length > 0 ? 'block' : 'none';
+    }
+    if (headerCalModes) {
+      headerCalModes.style.setProperty('display', 'none', 'important');
     }
   }
   
@@ -1372,9 +1374,8 @@ function renderMonthlyGrid() {
   
   const monthKeys = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
   const titleText = `${t(monthKeys[month])} ${year}`;
-  document.getElementById('calendar-title').innerText = titleText;
-  const headerTitle = document.getElementById('header-calendar-title');
-  if (headerTitle) headerTitle.innerText = titleText;
+  const calTitle = document.getElementById('calendar-title');
+  if (calTitle) calTitle.innerText = titleText;
   
   const weekStart = userProfile?.settings?.weekStart || 'sunday';
   
@@ -1580,9 +1581,8 @@ function renderWeeklyLayout() {
   const locale = lang === 'he' ? 'he-IL' : (lang === 'de' ? 'de-DE' : 'en-US');
   const options = { month: 'short', day: 'numeric' };
   const titleText = `${startDay.toLocaleDateString(locale, options)} - ${endOfWeek.toLocaleDateString(locale, options)}, ${endOfWeek.getFullYear()}`;
-  document.getElementById('calendar-title').innerText = titleText;
-  const headerTitle = document.getElementById('header-calendar-title');
-  if (headerTitle) headerTitle.innerText = titleText;
+  const calTitle = document.getElementById('calendar-title');
+  if (calTitle) calTitle.innerText = titleText;
   
   const todayStr = formatDateLocal(new Date());
   

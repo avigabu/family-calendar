@@ -181,7 +181,7 @@
             <path d="M15 18l-6-6 6-6"/>
           </svg>
         </button>
-        <span id="header-calendar-title" class="header-calendar-title-text"></span>
+        <span id="calendar-title" class="header-calendar-title-text"></span>
         <button class="btn-header-nav" onclick="changeDateRange(1)" title="Next">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
             <path d="M9 18l6-6-6-6"/>
@@ -199,6 +199,11 @@
             <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
           </svg>
         </button>
+        <div class="calendar-modes">
+          <button id="btn-mode-month" class="btn btn-segmented active" onclick="setCalendarMode('month')" data-i18n="month">Month</button>
+          <button id="btn-mode-week" class="btn btn-segmented" onclick="setCalendarMode('week')" data-i18n="week">Week</button>
+          <button class="btn btn-outline btn-today" onclick="setToday()" data-i18n="today">Today</button>
+        </div>
         <div class="header-profile" onclick="navigateTo('settings')">
           <span class="profile-avatar" id="header-avatar">M</span>
         </div>
@@ -210,28 +215,6 @@
       
       <!-- VIEW 1: CALENDAR VIEW -->
       <section id="view-calendar" class="app-section active-section">
-        <!-- Calendar Controls -->
-        <div class="calendar-controls">
-          <div class="calendar-nav">
-            <button class="btn btn-icon" onclick="changeDateRange(-1)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-                <path d="M15 18l-6-6 6-6"/>
-              </svg>
-            </button>
-            <span id="calendar-title" class="calendar-title">June 2026</span>
-            <button class="btn btn-icon" onclick="changeDateRange(1)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
-                <path d="M9 18l6-6-6-6"/>
-              </svg>
-            </button>
-          </div>
-          
-          <div class="calendar-modes">
-            <button id="btn-mode-month" class="btn btn-segmented active" onclick="setCalendarMode('month')" data-i18n="month">Month</button>
-            <button id="btn-mode-week" class="btn btn-segmented" onclick="setCalendarMode('week')" data-i18n="week">Week</button>
-            <button class="btn btn-outline btn-today" onclick="setToday()" data-i18n="today">Today</button>
-          </div>
-        </div>
 
         <!-- Filter Bar -->
         <div class="filter-bar">
