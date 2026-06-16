@@ -2019,8 +2019,8 @@ label {
 }
 
 
-[dir="rtl"] .btn-header-nav svg {
-  transform: scaleX(-1);
+[dir="rtl"] .btn-header-nav {
+  transform: scaleX(-1) !important;
 }
 
 [dir="rtl"] .floating-add-btn {
