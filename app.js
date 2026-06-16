@@ -11,7 +11,15 @@ let userFamilies = [];        // List of family documents the current user belon
 let activeView = 'calendar'; // 'calendar' | 'family' | 'settings'
 let calendarMode = 'month';  // 'month' | 'week'
 let currentDate = new Date(); // Anchor date for calendar grid calculations
-let selectedDay = new Date().toISOString().split('T')[0]; // For daily list in monthly view
+// Helper to format Date object into local YYYY-MM-DD string
+function formatDateLocal(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+let selectedDay = formatDateLocal(new Date()); // For daily list in monthly view
 
 // ================= INTERNATIONALIZATION & THEME SETTINGS =================
 const TRANSLATIONS = {
@@ -1423,10 +1431,10 @@ function renderMonthlyGrid() {
     });
   }
   
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = formatDateLocal(new Date());
   
   cells.forEach(cell => {
-    const cellDateStr = cell.date.toISOString().split('T')[0];
+    const cellDateStr = formatDateLocal(cell.date);
     const isToday = cellDateStr === todayStr;
     const isSelected = cellDateStr === selectedDay;
     
@@ -1576,12 +1584,12 @@ function renderWeeklyLayout() {
   const headerTitle = document.getElementById('header-calendar-title');
   if (headerTitle) headerTitle.innerText = titleText;
   
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = formatDateLocal(new Date());
   
   for (let i = 0; i < 7; i++) {
     const dayDate = new Date(startDay);
     dayDate.setDate(startDay.getDate() + i);
-    const dayDateStr = dayDate.toISOString().split('T')[0];
+    const dayDateStr = formatDateLocal(dayDate);
     const isToday = dayDateStr === todayStr;
     
     const dayOfWeekIndex = dayDate.getDay();
