@@ -2027,3 +2027,33 @@ label {
   right: auto;
   left: 16px;
 }
+
+/* Inline Edit Action Styles */
+.btn-inline-action {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  outline: none;
+  vertical-align: middle;
+}
+
+.btn-inline-action:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.inline-edit-input {
+  background-color: var(--bg-input) !important;
+  border: 1px solid var(--accent-primary) !important;
+  color: var(--text-primary) !important;
+  border-radius: 6px !important;
+  outline: none !important;
+  font-family: var(--font-family) !important;
+}

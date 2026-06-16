@@ -351,8 +351,15 @@
           <div class="profile-details-card">
             <div class="profile-main-info">
               <div class="profile-big-avatar" id="settings-avatar" style="background-color: #3b82f6;">S</div>
-              <div>
-                <h3 id="settings-user-name">User Name</h3>
+              <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <h3 id="settings-user-name">User Name</h3>
+                  <button id="btn-edit-name" class="btn-inline-action" onclick="toggleEditName()" title="Edit Name">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                </div>
                 <p id="settings-username-handle">email@example.com</p>
               </div>
             </div>
@@ -360,9 +367,16 @@
 
           <div class="settings-list">
             <div class="settings-item">
-              <div class="settings-item-info">
+              <div class="settings-item-info" style="width: 100%;">
                 <span id="settings-label-family" data-i18n="current_family_group">Current Family Group</span>
-                <span class="settings-item-value" id="settings-family-name" data-i18n="no_family_joined">No Family Joined</span>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px; width: 100%;">
+                  <span class="settings-item-value" id="settings-family-name" style="margin-top: 0;">No Family Joined</span>
+                  <button id="btn-edit-family-name" class="btn-inline-action" onclick="toggleEditFamilyName()" title="Edit Family Name" style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
 

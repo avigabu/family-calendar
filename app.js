@@ -795,19 +795,216 @@ async function initApp() {
   updateHeaderAndProfile();
 }
 
+let isEditingName = false;
+let isEditingFamilyName = false;
+
 function updateHeaderAndProfile() {
   if (!currentUser || !userProfile) return;
   
   const initials = userProfile.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
   const avatar = document.getElementById('header-avatar');
-  avatar.innerText = initials;
-  avatar.style.backgroundColor = userProfile.color;
+  if (avatar) {
+    avatar.innerText = initials;
+    avatar.style.backgroundColor = userProfile.color;
+  }
   
-  document.getElementById('settings-avatar').innerText = initials;
-  document.getElementById('settings-avatar').style.backgroundColor = userProfile.color;
-  document.getElementById('settings-user-name').innerText = userProfile.name;
-  document.getElementById('settings-username-handle').innerText = userProfile.email;
-  document.getElementById('settings-family-name').innerText = currentFamily ? currentFamily.name : t('no_family_joined');
+  const settingsAvatar = document.getElementById('settings-avatar');
+  if (settingsAvatar) {
+    settingsAvatar.innerText = initials;
+    settingsAvatar.style.backgroundColor = userProfile.color;
+  }
+  
+  const settingsName = document.getElementById('settings-user-name');
+  if (settingsName && !isEditingName) {
+    settingsName.innerText = userProfile.name;
+  }
+  
+  const settingsEmail = document.getElementById('settings-username-handle');
+  if (settingsEmail) {
+    settingsEmail.innerText = userProfile.email;
+  }
+  
+  const settingsFamilyName = document.getElementById('settings-family-name');
+  if (settingsFamilyName && !isEditingFamilyName) {
+    settingsFamilyName.innerText = currentFamily ? currentFamily.name : t('no_family_joined');
+  }
+  
+  const btnEditFamilyName = document.getElementById('btn-edit-family-name');
+  if (btnEditFamilyName) {
+    btnEditFamilyName.style.display = currentFamily ? 'inline-flex' : 'none';
+  }
+}
+
+// Inline edit for display name
+function toggleEditName() {
+  const nameEl = document.getElementById('settings-user-name');
+  const btnEl = document.getElementById('btn-edit-name');
+  if (!nameEl || !btnEl) return;
+  
+  if (!isEditingName) {
+    isEditingName = true;
+    const currentVal = userProfile.name;
+    nameEl.innerHTML = `
+      <input type="text" id="input-new-name" value="${escapeHtml(currentVal)}" class="inline-edit-input" style="width: auto; max-width: 180px; padding: 4px 8px; font-size: 14px; height: 28px; margin: 0;">
+    `;
+    btnEl.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14" style="color: var(--success-color);">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    `;
+    btnEl.title = "Save Name";
+    
+    const input = document.getElementById('input-new-name');
+    if (input) {
+      input.focus();
+      input.select();
+      input.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+          saveNewName();
+        } else if (e.key === 'Escape') {
+          cancelEditName(currentVal);
+        }
+      });
+    }
+  } else {
+    saveNewName();
+  }
+}
+
+async function saveNewName() {
+  const input = document.getElementById('input-new-name');
+  if (!input) return;
+  
+  const newVal = input.value.trim();
+  if (!newVal) {
+    showToast("Name cannot be empty", "error");
+    return;
+  }
+  
+  isEditingName = false;
+  try {
+    showToast("Updating display name...", "info");
+    await dbFirestore.collection("users").doc(currentUser.uid).update({
+      name: newVal
+    });
+    
+    userProfile.name = newVal;
+    updateHeaderAndProfile();
+    
+    // Also trigger update of members list if they are in a family
+    if (activeFamilyId) {
+      // The onSnapshot listener on members will automatically trigger renderFamilyHub,
+      // but let's update header avatar instantly.
+      const initials = newVal.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      const headerAvatar = document.getElementById('header-avatar');
+      if (headerAvatar) headerAvatar.innerText = initials;
+    }
+    
+    showToast("Display name updated!", "success");
+  } catch (err) {
+    console.error("Failed to update name:", err);
+    showToast("Error: " + err.message, "error");
+    updateHeaderAndProfile();
+  }
+}
+
+function cancelEditName(originalVal) {
+  isEditingName = false;
+  updateHeaderAndProfile();
+  const btnEl = document.getElementById('btn-edit-name');
+  if (btnEl) {
+    btnEl.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+    `;
+    btnEl.title = "Edit Name";
+  }
+}
+
+// Inline edit for family group name
+function toggleEditFamilyName() {
+  if (!currentFamily) return;
+  const nameEl = document.getElementById('settings-family-name');
+  const btnEl = document.getElementById('btn-edit-family-name');
+  if (!nameEl || !btnEl) return;
+  
+  if (!isEditingFamilyName) {
+    isEditingFamilyName = true;
+    const currentVal = currentFamily.name;
+    nameEl.innerHTML = `
+      <input type="text" id="input-new-family-name" value="${escapeHtml(currentVal)}" class="inline-edit-input" style="width: auto; max-width: 180px; padding: 4px 8px; font-size: 13px; height: 28px; margin: 0;">
+    `;
+    btnEl.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14" style="color: var(--success-color);">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    `;
+    btnEl.title = "Save Family Name";
+    
+    const input = document.getElementById('input-new-family-name');
+    if (input) {
+      input.focus();
+      input.select();
+      input.addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') {
+          saveNewFamilyName();
+        } else if (e.key === 'Escape') {
+          cancelEditFamilyName(currentVal);
+        }
+      });
+    }
+  } else {
+    saveNewFamilyName();
+  }
+}
+
+async function saveNewFamilyName() {
+  if (!currentFamily) return;
+  const input = document.getElementById('input-new-family-name');
+  if (!input) return;
+  
+  const newVal = input.value.trim();
+  if (!newVal) {
+    showToast("Family group name cannot be empty", "error");
+    return;
+  }
+  
+  isEditingFamilyName = false;
+  try {
+    showToast("Updating family name...", "info");
+    await dbFirestore.collection("families").doc(activeFamilyId).update({
+      name: newVal
+    });
+    
+    currentFamily.name = newVal;
+    const fIdx = userFamilies.findIndex(f => f.id === activeFamilyId);
+    if (fIdx !== -1) {
+      userFamilies[fIdx].name = newVal;
+    }
+    
+    updateFamilySwitcherUI();
+    updateHeaderAndProfile();
+    showToast("Family group name updated!", "success");
+  } catch (err) {
+    console.error("Failed to update family name:", err);
+    showToast("Error: " + err.message, "error");
+    updateHeaderAndProfile();
+  }
+}
+
+function cancelEditFamilyName(originalVal) {
+  isEditingFamilyName = false;
+  updateHeaderAndProfile();
+  const btnEl = document.getElementById('btn-edit-family-name');
+  if (btnEl) {
+    btnEl.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+      </svg>
+    `;
+    btnEl.title = "Edit Family Name";
+  }
 }
 
 // Switch registration / login tabs
