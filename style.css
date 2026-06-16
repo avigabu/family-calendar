@@ -2019,6 +2019,10 @@ label {
 }
 
 
+[dir="rtl"] .btn-header-nav svg {
+  transform: scaleX(-1);
+}
+
 [dir="rtl"] .floating-add-btn {
   right: auto;
   left: 16px;
