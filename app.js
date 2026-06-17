@@ -1975,6 +1975,13 @@ async function handleEventSubmit(e) {
   
   try {
     if (id) {
+      const originalEvent = events.find(e => e.id === id);
+      if (originalEvent && !canEditEvent(originalEvent)) {
+        showToast("You do not have permission to edit this event.", "error");
+        submitButton.innerText = t('save_event');
+        submitButton.disabled = false;
+        return;
+      }
       await dbFirestore.collection("events").doc(id).update(eventPayload);
       showToast('Event updated successfully!');
     } else {
@@ -1994,6 +2001,12 @@ async function handleDeleteEvent() {
   const id = document.getElementById('event-form-id').value;
   if (!id) return;
   
+  const originalEvent = events.find(e => e.id === id);
+  if (originalEvent && !canEditEvent(originalEvent)) {
+    showToast("You do not have permission to delete this event.", "error");
+    return;
+  }
+  
   if (!confirm(t('confirm_delete_event'))) return;
   
   try {
@@ -2008,6 +2021,14 @@ async function handleDeleteEvent() {
 // ================= EVENT DETAILS VIEWER POPUP =================
 
 let selectedEvent = null;
+
+function canEditEvent(event) {
+  if (!currentUser) return false;
+  const uid = currentUser.uid;
+  const isCreator = event.createdBy === uid;
+  const isRelevant = Array.isArray(event.relevantTo) && event.relevantTo.includes(uid);
+  return isCreator || isRelevant;
+}
 
 function openDetailsModal(eventId) {
   const event = events.find(e => e.id === eventId);
@@ -2069,6 +2090,16 @@ function openDetailsModal(eventId) {
       }
     });
   }
+  
+  // Enforce editing permissions
+  const editBtnContainer = document.querySelector('.details-actions');
+  if (editBtnContainer) {
+    if (canEditEvent(event)) {
+      editBtnContainer.style.display = 'flex';
+    } else {
+      editBtnContainer.style.display = 'none';
+    }
+  }
 }
 
 function closeDetailsModal() {
@@ -2078,6 +2109,10 @@ function closeDetailsModal() {
 
 function editEventFromDetails() {
   if (!selectedEvent) return;
+  if (!canEditEvent(selectedEvent)) {
+    showToast("You do not have permission to edit this event.", "error");
+    return;
+  }
   const eventToEdit = { ...selectedEvent };
   closeDetailsModal();
   openEventModal(eventToEdit);
