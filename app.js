@@ -19,6 +19,25 @@ function formatDateLocal(date) {
   return `${y}-${m}-${d}`;
 }
 
+// Helper to format date string (YYYY-MM-DD) or Date object into local DD/MM/YYYY string
+function formatDateDMY(date) {
+  if (typeof date === 'string') {
+    const parts = date.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    const dObj = new Date(date);
+    const d = String(dObj.getDate()).padStart(2, '0');
+    const m = String(dObj.getMonth() + 1).padStart(2, '0');
+    const y = dObj.getFullYear();
+    return `${d}/${m}/${y}`;
+  }
+  const d = String(date.getDate()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const y = date.getFullYear();
+  return `${d}/${m}/${y}`;
+}
+
 let selectedDay = formatDateLocal(new Date()); // For daily list in monthly view
 
 // ================= INTERNATIONALIZATION & THEME SETTINGS =================
@@ -1713,8 +1732,8 @@ function renderDailyAgenda() {
   const lang = userProfile?.settings?.language || 'en';
   const locale = lang === 'he' ? 'he-IL' : (lang === 'de' ? 'de-DE' : 'en-US');
   const dateObj = new Date(selectedDay);
-  const options = { weekday: 'long', month: 'long', day: 'numeric' };
-  const dateFormatted = dateObj.toLocaleDateString(locale, options);
+  const weekday = dateObj.toLocaleDateString(locale, { weekday: 'long' });
+  const dateFormatted = `${weekday}, ${formatDateDMY(selectedDay)}`;
   
   const dayEvents = getFilteredEventsForDate(selectedDay);
   
@@ -2068,10 +2087,10 @@ function openDetailsModal(eventId) {
   }
   
   const dateObj = new Date(event.date);
-  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
   const lang = userProfile?.settings?.language || 'en';
   const locale = lang === 'he' ? 'he-IL' : (lang === 'de' ? 'de-DE' : 'en-US');
-  document.getElementById('details-date-text').innerText = dateObj.toLocaleDateString(locale, options);
+  const weekday = dateObj.toLocaleDateString(locale, { weekday: 'long' });
+  document.getElementById('details-date-text').innerText = `${weekday}, ${formatDateDMY(event.date)}`;
   document.getElementById('details-time-text').innerText = `${event.startTime} - ${event.endTime}`;
   
   const creator = familyMembers.find(m => m.id === event.createdBy);
