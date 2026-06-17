@@ -1734,6 +1734,13 @@ label {
     overflow: hidden;
   }
 
+  #view-family.active-section,
+  #view-settings.active-section {
+    display: block !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
   /* Compact header with centered calendar title & Today button */
   .header-logo .logo-text {
     display: none;
