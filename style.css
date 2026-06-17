@@ -6,6 +6,7 @@
   --bg-secondary: #12182c;
   --bg-card: rgba(22, 28, 49, 0.65);
   --bg-input: rgba(30, 38, 64, 0.5);
+  --bg-input-focus: rgba(30, 38, 64, 0.7);
   
   --border-light: rgba(255, 255, 255, 0.06);
   --border-focus: rgba(99, 102, 241, 0.4);
@@ -78,7 +79,7 @@ input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--accent-primary);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-  background-color: rgba(30, 38, 64, 0.7);
+  background-color: var(--bg-input-focus);
 }
 
 textarea {
@@ -1936,6 +1937,7 @@ label {
   --bg-secondary: #ffffff;
   --bg-card: rgba(241, 245, 249, 0.75);
   --bg-input: #f1f5f9;
+  --bg-input-focus: #ffffff;
   
   --border-light: rgba(0, 0, 0, 0.08);
   --border-focus: rgba(99, 102, 241, 0.4);
