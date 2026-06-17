@@ -39,6 +39,19 @@ function formatDateDMY(date) {
   return `${d}/${m}/${y}`;
 }
 
+// Helper to parse local DD/MM/YYYY string into YYYY-MM-DD string
+function parseDMYtoYMD(dmyStr) {
+  if (!dmyStr) return '';
+  const parts = dmyStr.split('/');
+  if (parts.length === 3) {
+    const d = parts[0].padStart(2, '0');
+    const m = parts[1].padStart(2, '0');
+    const y = parts[2];
+    return `${y}-${m}-${d}`;
+  }
+  return dmyStr;
+}
+
 let selectedDay = formatDateLocal(new Date()); // For daily list in monthly view
 
 // ================= INTERNATIONALIZATION & THEME SETTINGS =================
@@ -575,6 +588,7 @@ let userProfileUnsubscribe = null;
 
 document.addEventListener('DOMContentLoaded', () => {
   setupSwipeGestures();
+  setupDateInputs();
   // Listen for authentication changes
   auth.onAuthStateChanged(async (user) => {
     if (user) {
@@ -642,6 +656,74 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+function setupDateInputMask(inputEl) {
+  if (!inputEl) return;
+  
+  inputEl.addEventListener('keydown', (e) => {
+    inputEl.isDeleting = (e.key === 'Backspace');
+  });
+
+  inputEl.addEventListener('input', (e) => {
+    let cursorPosition = e.target.selectionStart;
+    const originalLength = e.target.value.length;
+    
+    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+    
+    // Format to dd/mm/yyyy
+    let formatted = '';
+    if (value.length > 0) {
+      formatted += value.substring(0, 2);
+    }
+    if (value.length > 2) {
+      formatted += '/' + value.substring(2, 4);
+    }
+    if (value.length > 4) {
+      formatted += '/' + value.substring(4, 8);
+    }
+    
+    e.target.value = formatted;
+    
+    // Adjust cursor position if backspace wasn't just pressed
+    if (!inputEl.isDeleting) {
+      if (formatted.length > originalLength) {
+        const addedChars = formatted.length - originalLength;
+        cursorPosition += addedChars;
+      }
+    }
+    e.target.setSelectionRange(cursorPosition, cursorPosition);
+  });
+
+  inputEl.addEventListener('blur', (e) => {
+    const val = e.target.value;
+    if (val) {
+      const parts = val.split('/');
+      let isValid = false;
+      if (parts.length === 3) {
+        const d = parseInt(parts[0], 10);
+        const m = parseInt(parts[1], 10);
+        const y = parseInt(parts[2], 10);
+        if (d > 0 && d <= 31 && m > 0 && m <= 12 && y >= 1900 && y <= 2100) {
+          isValid = true;
+        }
+      }
+      if (!isValid) {
+        showToast('Please enter a valid date in dd/mm/yyyy format', 'error');
+        inputEl.style.borderColor = 'var(--danger-color)';
+      } else {
+        inputEl.style.borderColor = '';
+      }
+    } else {
+      inputEl.style.borderColor = '';
+    }
+  });
+}
+
+function setupDateInputs() {
+  setupDateInputMask(document.getElementById('event-date'));
+  setupDateInputMask(document.getElementById('flight-dep-date'));
+  setupDateInputMask(document.getElementById('flight-ret-date'));
+}
 
 function handleLogoutCleanup() {
   currentUser = null;
@@ -1724,10 +1806,17 @@ function renderMonthlyGrid() {
     dayEvents.slice(0, 3).forEach(evt => {
       const color = getEventColor(evt);
       const shortTime = formatShortTime(evt.startTime);
+      const isAllDay = evt.category !== 'regular';
+      
+      const isFlight = evt.category === 'flight';
+      const depDate = evt.flightDepDate || evt.date;
+      const isFirstDay = cellDateStr === depDate;
+      const displayTitle = !isFlight || isFirstDay;
+      
       pillsHtml += `
-        <div class="month-event-pill" style="--event-color: ${color}" title="${escapeHtml(evt.title)}">
-          <span class="pill-time">${shortTime}</span>
-          <span class="pill-title">${escapeHtml(evt.title)}</span>
+        <div class="month-event-pill ${isAllDay ? 'all-day' : ''}" style="--event-color: ${color}" title="${escapeHtml(evt.title)}">
+          ${!isAllDay ? `<span class="pill-time">${shortTime}</span>` : ''}
+          <span class="pill-title">${displayTitle ? escapeHtml(evt.title) : '&nbsp;'}</span>
         </div>
       `;
     });
@@ -1779,6 +1868,7 @@ function renderDailyAgenda() {
   } else {
     dayEvents.forEach(evt => {
       const color = getEventColor(evt);
+      const isAllDay = evt.category !== 'regular';
       
       let avatarsHtml = '';
       if (Array.isArray(evt.relevantTo)) {
@@ -1792,9 +1882,10 @@ function renderDailyAgenda() {
       }
       
       eventsListHtml += `
-        <div class="event-card" style="--event-color: ${color}" onclick="openDetailsModal('${evt.id}')">
+        <div class="event-card ${isAllDay ? 'all-day' : ''}" style="--event-color: ${color}" onclick="openDetailsModal('${evt.id}')">
           <div class="event-info">
             <div class="event-title-text">${escapeHtml(evt.title)}</div>
+            ${!isAllDay ? `
             <div class="event-time-text">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12">
                 <circle cx="12" cy="12" r="10"/>
@@ -1802,6 +1893,7 @@ function renderDailyAgenda() {
               </svg>
               <span>${evt.startTime} - ${evt.endTime}</span>
             </div>
+            ` : ''}
           </div>
           <div class="event-avatars">${avatarsHtml}</div>
         </div>
@@ -1868,6 +1960,12 @@ function renderWeeklyLayout() {
     } else {
       dayEvents.forEach(evt => {
         const color = getEventColor(evt);
+        const isAllDay = evt.category !== 'regular';
+        
+        const isFlight = evt.category === 'flight';
+        const depDate = evt.flightDepDate || evt.date;
+        const isFirstDay = dayDateStr === depDate;
+        const displayTitle = !isFlight || isFirstDay;
         
         let avatarsHtml = '';
         if (Array.isArray(evt.relevantTo)) {
@@ -1881,9 +1979,10 @@ function renderWeeklyLayout() {
         }
         
         eventsHtml += `
-          <div class="event-card" style="--event-color: ${color}" onclick="openDetailsModal('${evt.id}')">
+          <div class="event-card ${isAllDay ? 'all-day' : ''}" style="--event-color: ${color}" onclick="openDetailsModal('${evt.id}')">
             <div class="event-info">
-              <div class="event-title-text">${escapeHtml(evt.title)}</div>
+              <div class="event-title-text">${displayTitle ? escapeHtml(evt.title) : '&nbsp;'}</div>
+              ${!isAllDay ? `
               <div class="event-time-text">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12">
                   <circle cx="12" cy="12" r="10"/>
@@ -1891,6 +1990,7 @@ function renderWeeklyLayout() {
                 </svg>
                 <span>${evt.startTime} - ${evt.endTime}</span>
               </div>
+              ` : ''}
             </div>
             <div class="event-avatars">${avatarsHtml}</div>
           </div>
@@ -2005,7 +2105,7 @@ function toggleFlightFields(category) {
 
 function openEventModalForDate(dateStr) {
   openEventModal();
-  document.getElementById('event-date').value = dateStr;
+  document.getElementById('event-date').value = formatDateDMY(dateStr);
 }
 
 function openEventModal(eventToEdit = null) {
@@ -2017,6 +2117,12 @@ function openEventModal(eventToEdit = null) {
   form.reset();
   modal.classList.add('active');
   document.body.classList.add('modal-open');
+  
+  // Reset border colors for date inputs
+  ['event-date', 'flight-dep-date', 'flight-ret-date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.borderColor = '';
+  });
   
   const relevancyList = document.getElementById('event-relevancy-list');
   relevancyList.innerHTML = '';
@@ -2048,7 +2154,7 @@ function openEventModal(eventToEdit = null) {
     
     document.getElementById('event-form-id').value = eventToEdit.id;
     document.getElementById('event-title').value = eventToEdit.title;
-    document.getElementById('event-date').value = eventToEdit.date;
+    document.getElementById('event-date').value = formatDateDMY(eventToEdit.date);
     document.getElementById('event-start-time').value = eventToEdit.startTime;
     document.getElementById('event-end-time').value = eventToEdit.endTime;
     document.getElementById('event-category').value = eventToEdit.category;
@@ -2056,10 +2162,10 @@ function openEventModal(eventToEdit = null) {
     
     toggleFlightFields(eventToEdit.category);
     if (eventToEdit.category === 'flight') {
-      document.getElementById('flight-dep-date').value = eventToEdit.flightDepDate || '';
+      document.getElementById('flight-dep-date').value = formatDateDMY(eventToEdit.flightDepDate);
       document.getElementById('flight-dep-takeoff').value = eventToEdit.flightDepTakeoff || '';
       document.getElementById('flight-dep-landing').value = eventToEdit.flightDepLanding || '';
-      document.getElementById('flight-ret-date').value = eventToEdit.flightRetDate || '';
+      document.getElementById('flight-ret-date').value = formatDateDMY(eventToEdit.flightRetDate);
       document.getElementById('flight-ret-takeoff').value = eventToEdit.flightRetTakeoff || '';
       document.getElementById('flight-ret-landing').value = eventToEdit.flightRetLanding || '';
       document.getElementById('flight-passengers').value = eventToEdit.flightPassengers || '';
@@ -2070,7 +2176,7 @@ function openEventModal(eventToEdit = null) {
     actionTitle.innerText = t('new_event');
     btnDelete.style.display = 'none';
     document.getElementById('event-form-id').value = '';
-    document.getElementById('event-date').value = selectedDay;
+    document.getElementById('event-date').value = formatDateDMY(selectedDay);
     
     const now = new Date();
     const currentHourStr = String(now.getHours()).padStart(2, '0') + ':00';
@@ -2106,16 +2212,21 @@ async function handleEventSubmit(e) {
     title = destination || t('cat_flight');
     
     // Flight specific payload overrides
-    date = document.getElementById('flight-dep-date').value;
+    date = parseDMYtoYMD(document.getElementById('flight-dep-date').value);
     startTime = document.getElementById('flight-dep-takeoff').value;
     endTime = document.getElementById('flight-dep-landing').value || startTime;
     description = '';
     
-    // Flights are visible to all family members
-    relevantTo = familyMembers.map(m => m.id);
+    const checkedBoxes = document.querySelectorAll('input[name="event-relevant-member"]:checked');
+    relevantTo = Array.from(checkedBoxes).map(box => box.value);
+    
+    if (relevantTo.length === 0) {
+      showToast('Select at least one family member for this event.', 'error');
+      return;
+    }
   } else {
     title = document.getElementById('event-title').value;
-    date = document.getElementById('event-date').value;
+    date = parseDMYtoYMD(document.getElementById('event-date').value);
     startTime = document.getElementById('event-start-time').value;
     endTime = document.getElementById('event-end-time').value;
     description = document.getElementById('event-description').value;
@@ -2142,10 +2253,10 @@ async function handleEventSubmit(e) {
   };
   
   if (category === 'flight') {
-    eventPayload.flightDepDate = document.getElementById('flight-dep-date').value;
+    eventPayload.flightDepDate = parseDMYtoYMD(document.getElementById('flight-dep-date').value);
     eventPayload.flightDepTakeoff = document.getElementById('flight-dep-takeoff').value;
     eventPayload.flightDepLanding = document.getElementById('flight-dep-landing').value;
-    eventPayload.flightRetDate = document.getElementById('flight-ret-date').value;
+    eventPayload.flightRetDate = parseDMYtoYMD(document.getElementById('flight-ret-date').value);
     eventPayload.flightRetTakeoff = document.getElementById('flight-ret-takeoff').value;
     eventPayload.flightRetLanding = document.getElementById('flight-ret-landing').value;
     eventPayload.flightPassengers = document.getElementById('flight-passengers').value;

@@ -70,7 +70,7 @@ input, select, textarea {
   color: var(--text-primary);
   padding: 12px 16px;
   border-radius: var(--radius-sm);
-  font-size: 14px;
+  font-size: 16px;
   width: 100%;
   transition: all 0.2s ease;
 }
@@ -1198,12 +1198,12 @@ label {
   border-top-left-radius: var(--radius-lg);
   border-top-right-radius: var(--radius-lg);
   border-top: 1px solid var(--border-light);
-  padding: 24px 24px calc(32px + env(safe-area-inset-bottom)) 24px;
+  padding: 24px 24px calc(48px + env(safe-area-inset-bottom)) 24px;
   box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
   transform: translateY(100%);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  max-height: 85vh;
-  max-height: 85dvh;
+  max-height: 90vh;
+  max-height: 90dvh;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -2319,4 +2319,49 @@ body.modal-open {
   overflow: hidden !important;
   height: 100vh !important;
   height: 100dvh !important;
+}
+
+/* ================= ALL-DAY EVENT STYLING OVERRIDES ================= */
+
+/* Monthly calendar solid highlight pills */
+.month-event-pill.all-day {
+  background-color: var(--event-color) !important;
+  color: #ffffff !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+  margin: 1px 0 !important;
+  display: block !important;
+}
+
+/* Dark/Light text adaptation for month grid */
+.theme-light .month-event-pill.all-day {
+  color: #0a0d18 !important;
+}
+
+/* Weekly/Daily solid highlight event cards */
+.event-card.all-day {
+  background-color: var(--event-color) !important;
+  border-left: none !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.event-card.all-day:hover {
+  background-color: var(--event-color) !important;
+  opacity: 0.9;
+}
+
+/* Icons & time texts inside solid event cards should inherit high-contrast coloring */
+.event-card.all-day .event-time-text {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Dark/Light text adaptation for solid event cards */
+.theme-light .event-card.all-day {
+  color: #0a0d18 !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+.theme-light .event-card.all-day .event-time-text {
+  color: rgba(10, 13, 24, 0.8) !important;
 }

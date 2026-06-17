@@ -510,7 +510,7 @@
           <div class="form-row">
             <div class="form-group">
               <label for="event-date" data-i18n="event_date">Date</label>
-              <input type="date" id="event-date" required>
+              <input type="text" id="event-date" placeholder="dd/mm/yyyy" maxlength="10" required>
             </div>
             <div class="form-group">
               <label for="event-start-time" data-i18n="event_starts">Starts</label>
@@ -529,14 +529,6 @@
             <label for="event-description" data-i18n="event_description">Description</label>
             <textarea id="event-description" placeholder="Optional notes..."></textarea>
           </div>
-
-          <div class="form-group">
-            <label data-i18n="event_relevancy_label">Who is this relevant to?</label>
-            <p class="field-help-text" data-i18n="event_relevancy_desc">Select which family members will see this event on their calendar.</p>
-            <div class="relevancy-checkboxes-grid" id="event-relevancy-list">
-              <!-- Populated dynamically with family members -->
-            </div>
-          </div>
         </div>
 
         <!-- Flight Details Section -->
@@ -546,7 +538,7 @@
           <div class="form-row">
             <div class="form-group">
               <label for="flight-dep-date" data-i18n="flight_dep_date">Departure Date</label>
-              <input type="date" id="flight-dep-date">
+              <input type="text" id="flight-dep-date" placeholder="dd/mm/yyyy" maxlength="10">
             </div>
             <div class="form-group">
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
@@ -565,7 +557,7 @@
           <div class="form-row">
             <div class="form-group">
               <label for="flight-ret-date" data-i18n="flight_ret_date">Return Date</label>
-              <input type="date" id="flight-ret-date">
+              <input type="text" id="flight-ret-date" placeholder="dd/mm/yyyy" maxlength="10">
             </div>
             <div class="form-group">
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
