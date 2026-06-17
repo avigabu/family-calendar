@@ -110,12 +110,10 @@ const TRANSLATIONS = {
     event_relevancy_desc: "Select which family members will see this event on their calendar.",
     save_event: "Save Event",
     delete_event: "Delete Event",
-    cat_other: "Other 🗓️",
-    cat_chore: "Chore 🧹",
-    cat_appointment: "Appointment 🏥",
-    cat_fun: "Fun Activity 🎉",
-    cat_school: "School / Education 📚",
-    cat_work: "Work 💼",
+    cat_regular: "Regular Event 🗓️",
+    cat_school_vacation: "School Vacation 🎒",
+    cat_family_vacation: "Family Vacation 🏖️",
+    cat_flight: "Flight ✈️",
     filter_label: "Filter:",
     agenda_prefix: "Agenda:",
     no_events_today: "No events scheduled for this day.",
@@ -151,7 +149,20 @@ const TRANSLATIONS = {
     saving: "Saving...",
     you: "(You)",
     child_no_account: "Child / No Account",
-    new_event: "New Event"
+    new_event: "New Event",
+    flight_details: "Flight Details ✈️",
+    flight_dep_date: "Departure Date",
+    flight_dep_takeoff: "Takeoff",
+    flight_dep_landing: "Landing",
+    flight_ret_date: "Return Date",
+    flight_ret_takeoff: "Takeoff",
+    flight_ret_landing: "Landing",
+    flight_passengers: "Who is flying?",
+    flight_passengers_placeholder: "e.g. Mom & Dad",
+    flight_destination: "Where to?",
+    flight_destination_placeholder: "Destination",
+    flight_booking_ref: "Booking Reference",
+    flight_booking_ref_placeholder: "Booking code"
   },
   de: {
     calendar: "Kalender",
@@ -221,12 +232,10 @@ const TRANSLATIONS = {
     event_relevancy_desc: "Wähle aus, welche Familienmitglieder diesen Termin in ihrem Kalender sehen.",
     save_event: "Termin speichern",
     delete_event: "Termin löschen",
-    cat_other: "Sonstiges 🗓️",
-    cat_chore: "Aufgabe 🧹",
-    cat_appointment: "Termin 🏥",
-    cat_fun: "Freizeit 🎉",
-    cat_school: "Schule / Bildung 📚",
-    cat_work: "Arbeit 💼",
+    cat_regular: "Reguläre Veranstaltung 🗓️",
+    cat_school_vacation: "Schulferien 🎒",
+    cat_family_vacation: "Familienurlaub 🏖️",
+    cat_flight: "Flug ✈️",
     filter_label: "Filtern:",
     agenda_prefix: "Termine:",
     no_events_today: "Keine Termine für diesen Tag geplant.",
@@ -262,7 +271,20 @@ const TRANSLATIONS = {
     saving: "Wird gespeichert...",
     you: "(Du)",
     child_no_account: "Kind / Kein Konto",
-    new_event: "Neuer Termin"
+    new_event: "Neuer Termin",
+    flight_details: "Flugdetails ✈️",
+    flight_dep_date: "Hinflugsdatum",
+    flight_dep_takeoff: "Abflug",
+    flight_dep_landing: "Ankunft",
+    flight_ret_date: "Rückflugsdatum",
+    flight_ret_takeoff: "Abflug",
+    flight_ret_landing: "Ankunft",
+    flight_passengers: "Wer fliegt?",
+    flight_passengers_placeholder: "z.B. Mama & Papa",
+    flight_destination: "Wohin?",
+    flight_destination_placeholder: "Reiseziel",
+    flight_booking_ref: "Buchungscode",
+    flight_booking_ref_placeholder: "Buchungscode"
   },
   he: {
     calendar: "לוח שנה",
@@ -332,12 +354,10 @@ const TRANSLATIONS = {
     event_relevancy_desc: "בחר אילו בני משפחה יראו את האירוע בלוח השנה שלהם.",
     save_event: "שמור אירוע",
     delete_event: "מחק אירוע",
-    cat_other: "אחר 🗓️",
-    cat_chore: "מטלה 🧹",
-    cat_appointment: "תור 🏥",
-    cat_fun: "פעילות מהנה 🎉",
-    cat_school: "בית ספר / לימודים 📚",
-    cat_work: "עבודה 💼",
+    cat_regular: "אירוע רגיל 🗓️",
+    cat_school_vacation: "חופשת בית ספר 🎒",
+    cat_family_vacation: "חופשה משפחתית 🏖️",
+    cat_flight: "טיסה ✈️",
     filter_label: "סינון:",
     agenda_prefix: "סדר יום:",
     no_events_today: "אין אירועים מתוכננים ליום זה.",
@@ -373,7 +393,20 @@ const TRANSLATIONS = {
     saving: "שומר...",
     you: "(אני)",
     child_no_account: "ילד / ללא חשבון",
-    new_event: "אירוע חדש"
+    new_event: "אירוע חדש",
+    flight_details: "פרטי טיסה ✈️",
+    flight_dep_date: "תאריך הלוך",
+    flight_dep_takeoff: "המראה",
+    flight_dep_landing: "נחיתה",
+    flight_ret_date: "תאריך חזור",
+    flight_ret_takeoff: "המראה",
+    flight_ret_landing: "נחיתה",
+    flight_passengers: "מי טס?",
+    flight_passengers_placeholder: "לדוגמה: אמא ואבא",
+    flight_destination: "לאן טסים?",
+    flight_destination_placeholder: "יעד",
+    flight_booking_ref: "מספר הזמנה",
+    flight_booking_ref_placeholder: "קוד הזמנה"
   }
 };
 
@@ -1897,6 +1930,26 @@ function getFilteredEventsForDate(dateStr) {
 
 // ================= EVENT CREATION / EDITING FORM =================
 
+function toggleFlightFields(category) {
+  const flightFields = document.getElementById('flight-fields');
+  if (!flightFields) return;
+  
+  if (category === 'flight') {
+    flightFields.style.display = 'block';
+  } else {
+    flightFields.style.display = 'none';
+    const fields = [
+      'flight-dep-date', 'flight-dep-takeoff', 'flight-dep-landing',
+      'flight-ret-date', 'flight-ret-takeoff', 'flight-ret-landing',
+      'flight-passengers', 'flight-destination', 'flight-booking-ref'
+    ];
+    fields.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+  }
+}
+
 function openEventModalForDate(dateStr) {
   openEventModal();
   document.getElementById('event-date').value = dateStr;
@@ -1946,6 +1999,19 @@ function openEventModal(eventToEdit = null) {
     document.getElementById('event-end-time').value = eventToEdit.endTime;
     document.getElementById('event-category').value = eventToEdit.category;
     document.getElementById('event-description').value = eventToEdit.description || '';
+    
+    toggleFlightFields(eventToEdit.category);
+    if (eventToEdit.category === 'flight') {
+      document.getElementById('flight-dep-date').value = eventToEdit.flightDepDate || '';
+      document.getElementById('flight-dep-takeoff').value = eventToEdit.flightDepTakeoff || '';
+      document.getElementById('flight-dep-landing').value = eventToEdit.flightDepLanding || '';
+      document.getElementById('flight-ret-date').value = eventToEdit.flightRetDate || '';
+      document.getElementById('flight-ret-takeoff').value = eventToEdit.flightRetTakeoff || '';
+      document.getElementById('flight-ret-landing').value = eventToEdit.flightRetLanding || '';
+      document.getElementById('flight-passengers').value = eventToEdit.flightPassengers || '';
+      document.getElementById('flight-destination').value = eventToEdit.flightDestination || '';
+      document.getElementById('flight-booking-ref').value = eventToEdit.flightBookingRef || '';
+    }
   } else {
     actionTitle.innerText = t('new_event');
     btnDelete.style.display = 'none';
@@ -1958,6 +2024,8 @@ function openEventModal(eventToEdit = null) {
     
     document.getElementById('event-start-time').value = currentHourStr;
     document.getElementById('event-end-time').value = nextHourStr;
+    
+    toggleFlightFields('regular');
   }
 }
 
@@ -1995,6 +2063,28 @@ async function handleEventSubmit(e) {
     category,
     relevantTo
   };
+  
+  if (category === 'flight') {
+    eventPayload.flightDepDate = document.getElementById('flight-dep-date').value;
+    eventPayload.flightDepTakeoff = document.getElementById('flight-dep-takeoff').value;
+    eventPayload.flightDepLanding = document.getElementById('flight-dep-landing').value;
+    eventPayload.flightRetDate = document.getElementById('flight-ret-date').value;
+    eventPayload.flightRetTakeoff = document.getElementById('flight-ret-takeoff').value;
+    eventPayload.flightRetLanding = document.getElementById('flight-ret-landing').value;
+    eventPayload.flightPassengers = document.getElementById('flight-passengers').value;
+    eventPayload.flightDestination = document.getElementById('flight-destination').value;
+    eventPayload.flightBookingRef = document.getElementById('flight-booking-ref').value;
+  } else if (id) {
+    eventPayload.flightDepDate = firebase.firestore.FieldValue.delete();
+    eventPayload.flightDepTakeoff = firebase.firestore.FieldValue.delete();
+    eventPayload.flightDepLanding = firebase.firestore.FieldValue.delete();
+    eventPayload.flightRetDate = firebase.firestore.FieldValue.delete();
+    eventPayload.flightRetTakeoff = firebase.firestore.FieldValue.delete();
+    eventPayload.flightRetLanding = firebase.firestore.FieldValue.delete();
+    eventPayload.flightPassengers = firebase.firestore.FieldValue.delete();
+    eventPayload.flightDestination = firebase.firestore.FieldValue.delete();
+    eventPayload.flightBookingRef = firebase.firestore.FieldValue.delete();
+  }
   
   const submitButton = document.querySelector('#event-form button[type="submit"]');
   submitButton.innerText = t('saving');
@@ -2067,14 +2157,41 @@ function openDetailsModal(eventId) {
   
   const categoryBadge = document.getElementById('details-category-badge');
   const categoriesMap = {
-    chore: t('cat_chore'),
-    appointment: t('cat_appointment'),
-    fun: t('cat_fun'),
-    school: t('cat_school'),
-    work: t('cat_work'),
-    other: t('cat_other')
+    regular: t('cat_regular'),
+    school_vacation: t('cat_school_vacation'),
+    family_vacation: t('cat_family_vacation'),
+    flight: t('cat_flight')
   };
-  categoryBadge.innerText = categoriesMap[event.category] || t('cat_other');
+  categoryBadge.innerText = categoriesMap[event.category] || t('cat_regular');
+  
+  // Render flight details boarding pass if the event is a flight
+  const detailsFlightInfo = document.getElementById('details-flight-info');
+  if (detailsFlightInfo) {
+    if (event.category === 'flight') {
+      detailsFlightInfo.style.display = 'block';
+      document.getElementById('details-flight-booking-ref').innerText = event.flightBookingRef || 'N/A';
+      document.getElementById('details-flight-destination').innerText = event.flightDestination || 'N/A';
+      document.getElementById('details-flight-passengers').innerText = event.flightPassengers || 'N/A';
+      
+      document.getElementById('details-flight-dep-date').innerText = event.flightDepDate ? formatDateDMY(event.flightDepDate) : 'N/A';
+      document.getElementById('details-flight-dep-takeoff').innerText = event.flightDepTakeoff || '--:--';
+      document.getElementById('details-flight-dep-landing').innerText = event.flightDepLanding || '--:--';
+      
+      const returnContainer = document.getElementById('details-flight-ret-container');
+      if (returnContainer) {
+        if (event.flightRetDate) {
+          returnContainer.style.display = 'block';
+          document.getElementById('details-flight-ret-date').innerText = formatDateDMY(event.flightRetDate);
+          document.getElementById('details-flight-ret-takeoff').innerText = event.flightRetTakeoff || '--:--';
+          document.getElementById('details-flight-ret-landing').innerText = event.flightRetLanding || '--:--';
+        } else {
+          returnContainer.style.display = 'none';
+        }
+      }
+    } else {
+      detailsFlightInfo.style.display = 'none';
+    }
+  }
   
   document.getElementById('details-title').innerText = event.title;
   const descBox = document.getElementById('details-desc-box');

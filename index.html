@@ -503,13 +503,11 @@
           </div>
           <div class="form-group">
             <label for="event-category" data-i18n="event_category">Type</label>
-            <select id="event-category">
-              <option value="other" data-i18n="cat_other">Other 🗓️</option>
-              <option value="chore" data-i18n="cat_chore">Chore 🧹</option>
-              <option value="appointment" data-i18n="cat_appointment">Appointment 🏥</option>
-              <option value="fun" data-i18n="cat_fun">Fun Activity 🎉</option>
-              <option value="school" data-i18n="cat_school">School / Education 📚</option>
-              <option value="work" data-i18n="cat_work">Work 💼</option>
+            <select id="event-category" onchange="toggleFlightFields(this.value)">
+              <option value="regular" data-i18n="cat_regular">Regular Event 🗓️</option>
+              <option value="school_vacation" data-i18n="cat_school_vacation">School Vacation 🎒</option>
+              <option value="family_vacation" data-i18n="cat_family_vacation">Family Vacation 🏖️</option>
+              <option value="flight" data-i18n="cat_flight">Flight ✈️</option>
             </select>
           </div>
         </div>
@@ -528,6 +526,65 @@
         <div class="form-group">
           <label for="event-description" data-i18n="event_description">Description</label>
           <textarea id="event-description" placeholder="Optional notes..."></textarea>
+        </div>
+
+        <!-- Flight Details Section -->
+        <div id="flight-fields" style="display: none; border-top: 1px solid var(--border-light); padding-top: 12px; margin-top: 12px;">
+          <h4 style="font-size: 13px; font-weight: 700; color: var(--accent-primary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;" data-i18n="flight_details">Flight Details ✈️</h4>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="flight-dep-date" data-i18n="flight_dep_date">Departure Date</label>
+              <input type="date" id="flight-dep-date">
+            </div>
+            <div class="form-group">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div>
+                  <label for="flight-dep-takeoff" data-i18n="flight_dep_takeoff">Takeoff</label>
+                  <input type="time" id="flight-dep-takeoff">
+                </div>
+                <div>
+                  <label for="flight-dep-landing" data-i18n="flight_dep_landing">Landing</label>
+                  <input type="time" id="flight-dep-landing">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="flight-ret-date" data-i18n="flight_ret_date">Return Date</label>
+              <input type="date" id="flight-ret-date">
+            </div>
+            <div class="form-group">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div>
+                  <label for="flight-ret-takeoff" data-i18n="flight_ret_takeoff">Takeoff</label>
+                  <input type="time" id="flight-ret-takeoff">
+                </div>
+                <div>
+                  <label for="flight-ret-landing" data-i18n="flight_ret_landing">Landing</label>
+                  <input type="time" id="flight-ret-landing">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="flight-passengers" data-i18n="flight_passengers">Who is flying?</label>
+              <input type="text" id="flight-passengers" placeholder="e.g. Mom & Dad" data-i18n-placeholder="flight_passengers_placeholder">
+            </div>
+            <div class="form-group">
+              <label for="flight-destination" data-i18n="flight_destination">Where to?</label>
+              <input type="text" id="flight-destination" placeholder="Destination" data-i18n-placeholder="flight_destination_placeholder">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="flight-booking-ref" data-i18n="flight_booking_ref">Booking Reference</label>
+            <input type="text" id="flight-booking-ref" placeholder="Booking code" style="text-transform: uppercase;" data-i18n-placeholder="flight_booking_ref_placeholder">
+          </div>
         </div>
 
         <!-- RELEVANCY ASSIGNMENT (THE KEY REQUIREMENT) -->
@@ -581,6 +638,99 @@
 
         <div class="details-desc-box" id="details-desc-box">
           <p id="details-description">No description provided.</p>
+        </div>
+
+        <!-- Flight Boarding Pass / Ticket Card -->
+        <div id="details-flight-info" class="flight-ticket-card" style="display: none;">
+          <div class="ticket-header">
+            <div class="ticket-header-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" class="ticket-icon">
+                <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L14 19v-5.5z"/>
+              </svg>
+              <span data-i18n="flight_details">Flight Details</span>
+            </div>
+            <div class="ticket-pnr-container">
+              <span class="pnr-label" data-i18n="flight_booking_ref">Booking Reference</span>
+              <span id="details-flight-booking-ref" class="pnr-code">------</span>
+            </div>
+          </div>
+          
+          <div class="ticket-divider"></div>
+          
+          <div class="ticket-body">
+            <!-- Destination & Passengers Info -->
+            <div class="ticket-row-main">
+              <div class="ticket-destination-box">
+                <span class="ticket-label" data-i18n="flight_destination">Where to?</span>
+                <span id="details-flight-destination" class="ticket-value-highlight">---</span>
+              </div>
+              <div class="ticket-passengers-box">
+                <span class="ticket-label" data-i18n="flight_passengers">Who is flying?</span>
+                <span id="details-flight-passengers" class="ticket-value">---</span>
+              </div>
+            </div>
+            
+            <div class="ticket-sub-divider"></div>
+            
+            <!-- Outbound Flight -->
+            <div class="ticket-flight-leg">
+              <div class="leg-header">
+                <span class="leg-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="transform: rotate(45deg); display: inline-block;" class="leg-icon">
+                    <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L14 19v-5.5z"/>
+                  </svg>
+                  <span data-i18n="flight_dep_date">Departure</span>
+                </span>
+                <span id="details-flight-dep-date" class="leg-date">--/--/----</span>
+              </div>
+              <div class="leg-times">
+                <div class="time-block">
+                  <span class="time-label" data-i18n="flight_dep_takeoff">Takeoff</span>
+                  <span id="details-flight-dep-takeoff" class="time-val">--:--</span>
+                </div>
+                <div class="flight-path-connector">
+                  <div class="flight-line"></div>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12" class="connector-plane">
+                    <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L14 19v-5.5z"/>
+                  </svg>
+                </div>
+                <div class="time-block">
+                  <span class="time-label" data-i18n="flight_dep_landing">Landing</span>
+                  <span id="details-flight-dep-landing" class="time-val">--:--</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Inbound Flight -->
+            <div id="details-flight-ret-container" class="ticket-flight-leg">
+              <div class="ticket-sub-divider"></div>
+              <div class="leg-header">
+                <span class="leg-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="transform: rotate(225deg); display: inline-block;" class="leg-icon">
+                    <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L14 19v-5.5z"/>
+                  </svg>
+                  <span data-i18n="flight_ret_date">Return</span>
+                </span>
+                <span id="details-flight-ret-date" class="leg-date">--/--/----</span>
+              </div>
+              <div class="leg-times">
+                <div class="time-block">
+                  <span class="time-label" data-i18n="flight_ret_takeoff">Takeoff</span>
+                  <span id="details-flight-ret-takeoff" class="time-val">--:--</span>
+                </div>
+                <div class="flight-path-connector">
+                  <div class="flight-line"></div>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12" style="transform: scaleX(-1);" class="connector-plane">
+                    <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L14 19v-5.5z"/>
+                  </svg>
+                </div>
+                <div class="time-block">
+                  <span class="time-label" data-i18n="flight_ret_landing">Landing</span>
+                  <span id="details-flight-ret-landing" class="time-val">--:--</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="details-section">
