@@ -1542,6 +1542,18 @@ function changeDateRange(direction) {
   renderCalendar();
 }
 
+function getEventColor(evt) {
+  if (Array.isArray(evt.relevantTo) && evt.relevantTo.length === 1) {
+    const memberId = evt.relevantTo[0];
+    const member = familyMembers.find(m => m.id === memberId);
+    if (member && member.color) {
+      return member.color;
+    }
+  }
+  const creator = familyMembers.find(m => m.id === evt.createdBy);
+  return creator ? creator.color : 'var(--accent-primary)';
+}
+
 function renderCalendar() {
   if (!currentFamily) {
     const monthGrid = document.getElementById('monthly-grid');
@@ -1645,8 +1657,7 @@ function renderMonthlyGrid() {
     
     let dotsHtml = '';
     dayEvents.slice(0, 4).forEach(evt => {
-      const creator = familyMembers.find(m => m.id === evt.createdBy);
-      const color = creator ? creator.color : 'var(--accent-primary)';
+      const color = getEventColor(evt);
       dotsHtml += `<span class="event-dot" style="--event-color: ${color}"></span>`;
     });
     if (dayEvents.length > 4) {
@@ -1656,8 +1667,7 @@ function renderMonthlyGrid() {
     // Create text pills for desktop view
     let pillsHtml = '';
     dayEvents.slice(0, 3).forEach(evt => {
-      const creator = familyMembers.find(m => m.id === evt.createdBy);
-      const color = creator ? creator.color : 'var(--accent-primary)';
+      const color = getEventColor(evt);
       const shortTime = formatShortTime(evt.startTime);
       pillsHtml += `
         <div class="month-event-pill" style="--event-color: ${color}" title="${escapeHtml(evt.title)}">
@@ -1713,8 +1723,7 @@ function renderDailyAgenda() {
     eventsListHtml = `<p class="empty-day-message">${t('no_events_today')}</p>`;
   } else {
     dayEvents.forEach(evt => {
-      const creator = familyMembers.find(m => m.id === evt.createdBy);
-      const color = creator ? creator.color : 'var(--accent-primary)';
+      const color = getEventColor(evt);
       
       let avatarsHtml = '';
       if (Array.isArray(evt.relevantTo)) {
@@ -1804,8 +1813,7 @@ function renderWeeklyLayout() {
       eventsHtml = `<p class="empty-day-message">${t('no_events_scheduled')}</p>`;
     } else {
       dayEvents.forEach(evt => {
-        const creator = familyMembers.find(m => m.id === evt.createdBy);
-        const color = creator ? creator.color : 'var(--accent-primary)';
+        const color = getEventColor(evt);
         
         let avatarsHtml = '';
         if (Array.isArray(evt.relevantTo)) {
