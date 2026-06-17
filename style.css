@@ -34,6 +34,7 @@
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
+  --day-padding: 4px;
   --font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --shadow-main: 0 10px 30px rgba(0, 0, 0, 0.3);
   --glass-effect: backdrop-filter: blur(16px);
@@ -636,7 +637,7 @@ label {
   background: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: 10px;
-  padding: 4px;
+  padding: var(--day-padding);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -1602,6 +1603,7 @@ label {
 @media (min-width: 800px) {
   :root {
     --max-width: 1200px; /* Expand screen space for layout on desktop/tablets */
+    --day-padding: 6px;
   }
 
   .app-container {
@@ -1678,7 +1680,7 @@ label {
   .month-day {
     height: 120px; /* Force uniform fixed height on desktop */
     overflow: hidden;
-    padding: 6px;
+    padding: var(--day-padding);
   }
 
   .day-number {
@@ -1718,6 +1720,9 @@ label {
 
 /* ================= MOBILE LAYOUT & GESTURE COMBACTION (< 800px) ================= */
 @media (max-width: 799px) {
+  :root {
+    --day-padding: 2px;
+  }
   /* No-scroll mobile framework */
   .app-main {
     display: flex;
@@ -1845,7 +1850,7 @@ label {
     height: 60px;
     overflow: hidden;
     border-radius: 6px;
-    padding: 2px 2px; /* absolute minimum horizontal padding */
+    padding: var(--day-padding); /* absolute minimum horizontal padding */
   }
 
   .month-grid {
@@ -2331,6 +2336,21 @@ body.modal-open {
   padding: 2px 6px !important;
   margin: 1px 0 !important;
   display: block !important;
+  position: relative;
+}
+
+.month-event-pill.all-day.connect-left {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  margin-left: calc(-1 * var(--day-padding)) !important;
+  padding-left: calc(6px + var(--day-padding)) !important;
+}
+
+.month-event-pill.all-day.connect-right {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  margin-right: calc(-1 * var(--day-padding)) !important;
+  padding-right: calc(6px + var(--day-padding)) !important;
 }
 
 /* Dark/Light text adaptation for month grid */

@@ -1806,15 +1806,25 @@ function renderMonthlyGrid() {
     dayEvents.slice(0, 3).forEach(evt => {
       const color = getEventColor(evt);
       const shortTime = formatShortTime(evt.startTime);
-      const isAllDay = evt.category !== 'regular';
+      const isAllDay = evt.category === 'flight';
       
       const isFlight = evt.category === 'flight';
       const depDate = evt.flightDepDate || evt.date;
+      const retDate = evt.flightRetDate;
       const isFirstDay = cellDateStr === depDate;
-      const displayTitle = !isFlight || isFirstDay;
+      
+      const dayOfWeek = cell.date.getDay();
+      const isFirstDayOfWeek = (weekStart === 'sunday' && dayOfWeek === 0) || (weekStart === 'monday' && dayOfWeek === 1);
+      const isLastDayOfWeek = (weekStart === 'sunday' && dayOfWeek === 6) || (weekStart === 'monday' && dayOfWeek === 0);
+      
+      const displayTitle = !isFlight || isFirstDay || isFirstDayOfWeek;
+      
+      const connectLeft = isFlight && cellDateStr > depDate && !isFirstDayOfWeek;
+      const connectRight = isFlight && retDate && cellDateStr < retDate && !isLastDayOfWeek;
+      const connClass = (connectLeft ? ' connect-left' : '') + (connectRight ? ' connect-right' : '');
       
       pillsHtml += `
-        <div class="month-event-pill ${isAllDay ? 'all-day' : ''}" style="--event-color: ${color}" title="${escapeHtml(evt.title)}">
+        <div class="month-event-pill ${isAllDay ? 'all-day' : ''}${connClass}" style="--event-color: ${color}" title="${escapeHtml(evt.title)}">
           ${!isAllDay ? `<span class="pill-time">${shortTime}</span>` : ''}
           <span class="pill-title">${displayTitle ? escapeHtml(evt.title) : '&nbsp;'}</span>
         </div>
@@ -1868,7 +1878,7 @@ function renderDailyAgenda() {
   } else {
     dayEvents.forEach(evt => {
       const color = getEventColor(evt);
-      const isAllDay = evt.category !== 'regular';
+      const isAllDay = evt.category === 'flight';
       
       let avatarsHtml = '';
       if (Array.isArray(evt.relevantTo)) {
@@ -1960,12 +1970,7 @@ function renderWeeklyLayout() {
     } else {
       dayEvents.forEach(evt => {
         const color = getEventColor(evt);
-        const isAllDay = evt.category !== 'regular';
-        
-        const isFlight = evt.category === 'flight';
-        const depDate = evt.flightDepDate || evt.date;
-        const isFirstDay = dayDateStr === depDate;
-        const displayTitle = !isFlight || isFirstDay;
+        const isAllDay = evt.category === 'flight';
         
         let avatarsHtml = '';
         if (Array.isArray(evt.relevantTo)) {
@@ -1981,7 +1986,7 @@ function renderWeeklyLayout() {
         eventsHtml += `
           <div class="event-card ${isAllDay ? 'all-day' : ''}" style="--event-color: ${color}" onclick="openDetailsModal('${evt.id}')">
             <div class="event-info">
-              <div class="event-title-text">${displayTitle ? escapeHtml(evt.title) : '&nbsp;'}</div>
+              <div class="event-title-text">${escapeHtml(evt.title)}</div>
               ${!isAllDay ? `
               <div class="event-time-text">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12">
