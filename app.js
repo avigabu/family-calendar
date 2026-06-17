@@ -21,6 +21,7 @@ function formatDateLocal(date) {
 
 // Helper to format date string (YYYY-MM-DD) or Date object into local DD/MM/YYYY string
 function formatDateDMY(date) {
+  if (!date) return '';
   if (typeof date === 'string') {
     const parts = date.split('-');
     if (parts.length === 3) {
@@ -1339,6 +1340,7 @@ async function handleDeleteAccount() {
 function showForgotPassword(e) {
   if (e) e.preventDefault();
   document.getElementById('forgot-modal').classList.add('active');
+  document.body.classList.add('modal-open');
   document.getElementById('forgot-verify-form').style.display = 'block';
   document.getElementById('forgot-reset-form').style.display = 'none';
   document.getElementById('forgot-verify-form').reset();
@@ -1346,6 +1348,7 @@ function showForgotPassword(e) {
 
 function closeForgotPassword() {
   document.getElementById('forgot-modal').classList.remove('active');
+  document.body.classList.remove('modal-open');
 }
 
 async function handleForgotPasswordVerify(e) {
@@ -1917,7 +1920,17 @@ function renderWeeklyLayout() {
 
 function getFilteredEventsForDate(dateStr) {
   return events.filter(evt => {
-    if (evt.date !== dateStr) return false;
+    if (evt.category === 'flight') {
+      const depDate = evt.flightDepDate || evt.date;
+      const retDate = evt.flightRetDate;
+      if (retDate) {
+        if (dateStr < depDate || dateStr > retDate) return false;
+      } else {
+        if (dateStr !== depDate) return false;
+      }
+    } else {
+      if (evt.date !== dateStr) return false;
+    }
     
     const creatorMatches = activeFilters.includes(evt.createdBy);
     const relevantMatch = Array.isArray(evt.relevantTo) && 
@@ -2003,6 +2016,7 @@ function openEventModal(eventToEdit = null) {
   
   form.reset();
   modal.classList.add('active');
+  document.body.classList.add('modal-open');
   
   const relevancyList = document.getElementById('event-relevancy-list');
   relevancyList.innerHTML = '';
@@ -2071,6 +2085,7 @@ function openEventModal(eventToEdit = null) {
 
 function closeEventModal() {
   document.getElementById('event-modal').classList.remove('active');
+  document.body.classList.remove('modal-open');
 }
 
 async function handleEventSubmit(e) {
@@ -2216,6 +2231,7 @@ function openDetailsModal(eventId) {
   selectedEvent = event;
   const modal = document.getElementById('details-modal');
   modal.classList.add('active');
+  document.body.classList.add('modal-open');
   
   const categoryBadge = document.getElementById('details-category-badge');
   const categoriesMap = {
@@ -2310,6 +2326,7 @@ function openDetailsModal(eventId) {
 
 function closeDetailsModal() {
   document.getElementById('details-modal').classList.remove('active');
+  document.body.classList.remove('modal-open');
   selectedEvent = null;
 }
 
@@ -2413,6 +2430,7 @@ async function handleJoinFamilyFromHub(e) {
 function closeModalOnOverlayClick(e) {
   if (e.target.classList.contains('modal-overlay')) {
     e.target.classList.remove('active');
+    document.body.classList.remove('modal-open');
   }
 }
 

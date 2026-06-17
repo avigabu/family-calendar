@@ -1205,6 +1205,7 @@ label {
   max-height: 85vh;
   max-height: 85dvh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-overlay.active .modal-sheet {
@@ -2312,4 +2313,10 @@ input:-webkit-autofill:active {
 .theme-light input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 30px #ffffff inset !important;
   -webkit-text-fill-color: #0f172a !important;
+}
+
+body.modal-open {
+  overflow: hidden !important;
+  height: 100vh !important;
+  height: 100dvh !important;
 }
