@@ -625,18 +625,22 @@ label {
 .month-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-  background: rgba(0, 0, 0, 0.1);
+  gap: 0;
+  background: rgba(0, 0, 0, 0.15);
   border-radius: var(--radius-md);
-  padding: 6px;
+  padding: 0;
+  border: 1px solid var(--border-light);
+  overflow: hidden;
 }
 
 .month-day {
   aspect-ratio: auto;
   min-height: 80px;
   background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: 10px;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  border-right: 1px solid var(--border-light);
+  border-radius: 0;
   padding: var(--day-padding);
   display: flex;
   flex-direction: column;
@@ -646,13 +650,20 @@ label {
   transition: all 0.15s ease;
 }
 
+.month-day:nth-child(7n) {
+  border-right: none;
+}
+
+.month-day:nth-last-child(-n+7) {
+  border-bottom: none;
+}
+
 .month-day:hover {
-  border-color: rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.02);
 }
 
 .month-day:active {
-  transform: scale(0.96);
+  transform: scale(0.98);
 }
 
 .month-day.other-month {
@@ -666,8 +677,11 @@ label {
 }
 
 .month-day.selected {
-  border-color: var(--accent-primary);
-  background: rgba(99, 102, 241, 0.04);
+  outline: 1.5px solid var(--accent-primary) !important;
+  outline-offset: -1.5px !important;
+  background: rgba(99, 102, 241, 0.04) !important;
+  position: relative;
+  z-index: 2;
 }
 
 .day-number {
@@ -707,7 +721,7 @@ label {
 .month-event-pill {
   display: flex;
   align-items: center;
-  font-size: 9px;
+  font-size: 10.5px;
   padding: 1px 0;
   background: transparent;
   color: var(--event-color, var(--accent-primary));
@@ -1699,12 +1713,12 @@ label {
   }
 
   .month-event-pill {
-    font-size: 11px;
+    font-size: 12.5px;
     padding: 2px 0;
   }
 
   .month-event-pill .pill-time {
-    font-size: 9px;
+    font-size: 10px;
     margin-right: 4px;
   }
 
@@ -1849,20 +1863,20 @@ label {
   .month-day {
     height: 60px;
     overflow: hidden;
-    border-radius: 6px;
+    border-radius: 0;
     padding: var(--day-padding); /* absolute minimum horizontal padding */
   }
 
   .month-grid {
-    gap: 3px;
-    padding: 3px;
+    gap: 0;
+    padding: 0;
     border-radius: var(--radius-sm);
   }
 
   .month-event-pill {
-    font-size: 8px; /* smaller title font on mobile to fit more characters */
-    font-weight: 500; /* Slimmer text */
-    letter-spacing: -0.3px; /* Tighter letter spacing */
+    font-size: 10px; /* smaller title font on mobile to fit more characters */
+    font-weight: 600; /* Medium-bold text */
+    letter-spacing: -0.15px; /* Tighter letter spacing */
   }
 
   .month-event-pill .pill-time {
