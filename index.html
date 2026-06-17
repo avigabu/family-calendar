@@ -492,40 +492,51 @@
         <input type="hidden" id="event-form-id">
         
         <div class="form-group">
-          <label for="event-title" data-i18n="event_title">Title</label>
-          <input type="text" id="event-title" placeholder="e.g. Dinner / Groceries" required>
+          <label for="event-category" data-i18n="event_category">Type</label>
+          <select id="event-category" onchange="toggleFlightFields(this.value)">
+            <option value="regular" data-i18n="cat_regular">Regular Event 🗓️</option>
+            <option value="school_vacation" data-i18n="cat_school_vacation">School Vacation 🎒</option>
+            <option value="family_vacation" data-i18n="cat_family_vacation">Family Vacation 🏖️</option>
+            <option value="flight" data-i18n="cat_flight">Flight ✈️</option>
+          </select>
         </div>
 
-        <div class="form-row">
+        <div id="standard-fields">
           <div class="form-group">
-            <label for="event-date" data-i18n="event_date">Date</label>
-            <input type="date" id="event-date" required>
+            <label for="event-title" data-i18n="event_title">Title</label>
+            <input type="text" id="event-title" placeholder="e.g. Dinner / Groceries" required>
           </div>
-          <div class="form-group">
-            <label for="event-category" data-i18n="event_category">Type</label>
-            <select id="event-category" onchange="toggleFlightFields(this.value)">
-              <option value="regular" data-i18n="cat_regular">Regular Event 🗓️</option>
-              <option value="school_vacation" data-i18n="cat_school_vacation">School Vacation 🎒</option>
-              <option value="family_vacation" data-i18n="cat_family_vacation">Family Vacation 🏖️</option>
-              <option value="flight" data-i18n="cat_flight">Flight ✈️</option>
-            </select>
-          </div>
-        </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="event-start-time" data-i18n="event_starts">Starts</label>
-            <input type="time" id="event-start-time" required>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="event-date" data-i18n="event_date">Date</label>
+              <input type="date" id="event-date" required>
+            </div>
+            <div class="form-group">
+              <label for="event-start-time" data-i18n="event_starts">Starts</label>
+              <input type="time" id="event-start-time" required>
+            </div>
           </div>
-          <div class="form-group">
-            <label for="event-end-time" data-i18n="event_ends">Ends</label>
-            <input type="time" id="event-end-time" required>
-          </div>
-        </div>
 
-        <div class="form-group">
-          <label for="event-description" data-i18n="event_description">Description</label>
-          <textarea id="event-description" placeholder="Optional notes..."></textarea>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="event-end-time" data-i18n="event_ends">Ends</label>
+              <input type="time" id="event-end-time" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="event-description" data-i18n="event_description">Description</label>
+            <textarea id="event-description" placeholder="Optional notes..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label data-i18n="event_relevancy_label">Who is this relevant to?</label>
+            <p class="field-help-text" data-i18n="event_relevancy_desc">Select which family members will see this event on their calendar.</p>
+            <div class="relevancy-checkboxes-grid" id="event-relevancy-list">
+              <!-- Populated dynamically with family members -->
+            </div>
+          </div>
         </div>
 
         <!-- Flight Details Section -->

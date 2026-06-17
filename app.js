@@ -1837,8 +1837,7 @@ function renderWeeklyLayout() {
   
   const lang = userProfile?.settings?.language || 'en';
   const locale = lang === 'he' ? 'he-IL' : (lang === 'de' ? 'de-DE' : 'en-US');
-  const options = { month: 'short', day: 'numeric' };
-  const titleText = `${startDay.toLocaleDateString(locale, options)} - ${endOfWeek.toLocaleDateString(locale, options)}, ${endOfWeek.getFullYear()}`;
+  const titleText = `${formatDateDMY(formatDateLocal(startDay))} - ${formatDateDMY(formatDateLocal(endOfWeek))}`;
   const calTitle = document.getElementById('calendar-title');
   if (calTitle) calTitle.innerText = titleText;
   
@@ -1932,12 +1931,53 @@ function getFilteredEventsForDate(dateStr) {
 
 function toggleFlightFields(category) {
   const flightFields = document.getElementById('flight-fields');
+  const standardFields = document.getElementById('standard-fields');
   if (!flightFields) return;
+  
+  const titleInput = document.getElementById('event-title');
+  const dateInput = document.getElementById('event-date');
+  const startTimeInput = document.getElementById('event-start-time');
+  const endTimeInput = document.getElementById('event-end-time');
+  
+  const flightDepDateInput = document.getElementById('flight-dep-date');
+  const flightDepTakeoffInput = document.getElementById('flight-dep-takeoff');
   
   if (category === 'flight') {
     flightFields.style.display = 'block';
+    if (standardFields) standardFields.style.display = 'none';
+    
+    // Auto-fill departure date & takeoff from standard date/time inputs if they are empty
+    if (dateInput && dateInput.value && flightDepDateInput && !flightDepDateInput.value) {
+      flightDepDateInput.value = dateInput.value;
+    }
+    if (startTimeInput && startTimeInput.value && flightDepTakeoffInput && !flightDepTakeoffInput.value) {
+      flightDepTakeoffInput.value = startTimeInput.value;
+    }
+    
+    // Prevent HTML5 validation errors on hidden fields by removing required
+    if (titleInput) titleInput.removeAttribute('required');
+    if (dateInput) dateInput.removeAttribute('required');
+    if (startTimeInput) startTimeInput.removeAttribute('required');
+    if (endTimeInput) endTimeInput.removeAttribute('required');
+    
+    // Add required to essential flight fields
+    if (flightDepDateInput) flightDepDateInput.setAttribute('required', 'required');
+    if (flightDepTakeoffInput) flightDepTakeoffInput.setAttribute('required', 'required');
   } else {
     flightFields.style.display = 'none';
+    if (standardFields) standardFields.style.display = 'block';
+    
+    // Restore required attributes to standard fields
+    if (titleInput) titleInput.setAttribute('required', 'required');
+    if (dateInput) dateInput.setAttribute('required', 'required');
+    if (startTimeInput) startTimeInput.setAttribute('required', 'required');
+    if (endTimeInput) endTimeInput.setAttribute('required', 'required');
+    
+    // Remove required from flight fields
+    if (flightDepDateInput) flightDepDateInput.removeAttribute('required');
+    if (flightDepTakeoffInput) flightDepTakeoffInput.removeAttribute('required');
+    
+    // Clear flight inputs when hidden
     const fields = [
       'flight-dep-date', 'flight-dep-takeoff', 'flight-dep-landing',
       'flight-ret-date', 'flight-ret-takeoff', 'flight-ret-landing',
@@ -2037,19 +2077,41 @@ async function handleEventSubmit(e) {
   e.preventDefault();
   
   const id = document.getElementById('event-form-id').value;
-  const title = document.getElementById('event-title').value;
-  const date = document.getElementById('event-date').value;
-  const startTime = document.getElementById('event-start-time').value;
-  const endTime = document.getElementById('event-end-time').value;
   const category = document.getElementById('event-category').value;
-  const description = document.getElementById('event-description').value;
   
-  const checkedBoxes = document.querySelectorAll('input[name="event-relevant-member"]:checked');
-  const relevantTo = Array.from(checkedBoxes).map(box => box.value);
+  let title = '';
+  let date = '';
+  let startTime = '';
+  let endTime = '';
+  let description = '';
+  let relevantTo = [];
   
-  if (relevantTo.length === 0) {
-    showToast('Select at least one family member for this event.', 'error');
-    return;
+  if (category === 'flight') {
+    const destination = document.getElementById('flight-destination').value;
+    title = destination || t('cat_flight');
+    
+    // Flight specific payload overrides
+    date = document.getElementById('flight-dep-date').value;
+    startTime = document.getElementById('flight-dep-takeoff').value;
+    endTime = document.getElementById('flight-dep-landing').value || startTime;
+    description = '';
+    
+    // Flights are visible to all family members
+    relevantTo = familyMembers.map(m => m.id);
+  } else {
+    title = document.getElementById('event-title').value;
+    date = document.getElementById('event-date').value;
+    startTime = document.getElementById('event-start-time').value;
+    endTime = document.getElementById('event-end-time').value;
+    description = document.getElementById('event-description').value;
+    
+    const checkedBoxes = document.querySelectorAll('input[name="event-relevant-member"]:checked');
+    relevantTo = Array.from(checkedBoxes).map(box => box.value);
+    
+    if (relevantTo.length === 0) {
+      showToast('Select at least one family member for this event.', 'error');
+      return;
+    }
   }
   
   const eventPayload = {
