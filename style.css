@@ -654,6 +654,14 @@ label {
   border-right: none;
 }
 
+/* RTL grid border collapsing overrides */
+[dir="rtl"] .month-day:nth-child(7n) {
+  border-right: 1px solid var(--border-light);
+}
+[dir="rtl"] .month-day:nth-child(7n+1) {
+  border-right: none;
+}
+
 .month-day:nth-last-child(-n+7) {
   border-bottom: none;
 }
@@ -2351,6 +2359,7 @@ body.modal-open {
   margin: 1px 0 !important;
   display: block !important;
   position: relative;
+  z-index: 1;
 }
 
 .month-event-pill.all-day.connect-left {
