@@ -1448,6 +1448,7 @@ function showForgotPassword(e) {
   if (e) e.preventDefault();
   document.getElementById('forgot-modal').classList.add('active');
   document.body.classList.add('modal-open');
+  pushModalState();
   document.getElementById('forgot-verify-form').style.display = 'block';
   document.getElementById('forgot-reset-form').style.display = 'none';
   document.getElementById('forgot-verify-form').reset();
@@ -1456,6 +1457,7 @@ function showForgotPassword(e) {
 function closeForgotPassword() {
   document.getElementById('forgot-modal').classList.remove('active');
   document.body.classList.remove('modal-open');
+  popModalState();
 }
 
 async function handleForgotPasswordVerify(e) {
@@ -1726,15 +1728,23 @@ function getEventColor(evt) {
 
 function getEventDisplayTitle(evt) {
   if (evt.category === 'flight') {
-    const dest = evt.flightDestination || evt.title || t('cat_flight');
-    const pax = evt.flightPassengers;
-    const prefix = t('flight_to');
-    const separator = prefix.endsWith('ל') ? '' : ' ';
-    if (pax) {
-      return `${prefix}${separator}${dest}, ${pax}`;
-    } else {
-      return `${prefix}${separator}${dest}`;
+    const dest = evt.flightDestination || evt.title || '';
+    // Strip default fallback values (like 'Flight ✈️') if they match standard translations
+    let cleanDest = dest;
+    const fallbacks = ['Flight ✈️', 'Flug ✈️', 'טיסה ✈️', t('cat_flight')];
+    if (fallbacks.includes(cleanDest)) {
+      cleanDest = '';
     }
+    
+    const pax = evt.flightPassengers;
+    let title = '✈️';
+    if (cleanDest) {
+      title += ` ${cleanDest}`;
+    }
+    if (pax) {
+      title += cleanDest ? `, ${pax}` : ` ${pax}`;
+    }
+    return title;
   }
   return evt.title;
 }
@@ -2195,6 +2205,7 @@ function openEventModal(eventToEdit = null) {
   form.reset();
   modal.classList.add('active');
   document.body.classList.add('modal-open');
+  pushModalState();
   
   // Reset border colors for date inputs
   ['event-date', 'event-end-date', 'flight-dep-date', 'flight-ret-date'].forEach(id => {
@@ -2272,6 +2283,7 @@ function openEventModal(eventToEdit = null) {
 function closeEventModal() {
   document.getElementById('event-modal').classList.remove('active');
   document.body.classList.remove('modal-open');
+  popModalState();
 }
 
 async function handleEventSubmit(e) {
@@ -2439,6 +2451,7 @@ function openDetailsModal(eventId) {
   const modal = document.getElementById('details-modal');
   modal.classList.add('active');
   document.body.classList.add('modal-open');
+  pushModalState();
   
   const categoryBadge = document.getElementById('details-category-badge');
   const categoriesMap = {
@@ -2555,6 +2568,7 @@ function closeDetailsModal() {
   document.getElementById('details-modal').classList.remove('active');
   document.body.classList.remove('modal-open');
   selectedEvent = null;
+  popModalState();
 }
 
 function editEventFromDetails() {
@@ -2658,6 +2672,7 @@ function closeModalOnOverlayClick(e) {
   if (e.target.classList.contains('modal-overlay')) {
     e.target.classList.remove('active');
     document.body.classList.remove('modal-open');
+    popModalState();
   }
 }
 
@@ -2791,3 +2806,40 @@ function handleSwipeGesture() {
     }
   }
 }
+
+// ================= PHONE BACK BUTTON MODAL CONTROL =================
+
+let modalHistoryPushed = false;
+
+function pushModalState() {
+  if (!modalHistoryPushed) {
+    modalHistoryPushed = true;
+    history.pushState({ modalOpen: true }, '');
+  }
+}
+
+function popModalState() {
+  setTimeout(() => {
+    const activeModals = document.querySelectorAll('.modal-overlay.active');
+    if (activeModals.length === 0 && modalHistoryPushed) {
+      modalHistoryPushed = false;
+      history.back();
+    }
+  }, 50);
+}
+
+window.addEventListener('popstate', (event) => {
+  if (event.state && event.state.modalOpen) {
+    return;
+  }
+  if (modalHistoryPushed) {
+    modalHistoryPushed = false;
+    const activeModals = document.querySelectorAll('.modal-overlay.active');
+    if (activeModals.length > 0) {
+      activeModals.forEach(modal => {
+        modal.classList.remove('active');
+      });
+      document.body.classList.remove('modal-open');
+    }
+  }
+});
