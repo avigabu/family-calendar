@@ -2042,7 +2042,13 @@ function getFilteredEventsForDate(dateStr) {
       evt.relevantTo.some(uid => activeFilters.includes(uid));
       
     return creatorMatches || relevantMatch;
-  }).sort((a, b) => a.startTime.localeCompare(b.startTime));
+  }).sort((a, b) => {
+    const isAAllDay = a.category === 'flight';
+    const isBAllDay = b.category === 'flight';
+    if (isAAllDay && !isBAllDay) return -1;
+    if (!isAAllDay && isBAllDay) return 1;
+    return a.startTime.localeCompare(b.startTime);
+  });
 }
 
 // ================= EVENT CREATION / EDITING FORM =================

@@ -2346,7 +2346,10 @@ body.modal-open {
 .month-event-pill.all-day {
   background-color: var(--event-color) !important;
   color: #ffffff !important;
-  border-radius: 4px !important;
+  border-start-start-radius: 4px !important;
+  border-end-start-radius: 4px !important;
+  border-start-end-radius: 4px !important;
+  border-end-end-radius: 4px !important;
   padding: 2px 6px !important;
   margin: 1px 0 !important;
   display: block !important;
@@ -2354,17 +2357,17 @@ body.modal-open {
 }
 
 .month-event-pill.all-day.connect-left {
-  border-top-left-radius: 0 !important;
-  border-bottom-left-radius: 0 !important;
-  margin-left: calc(-1 * var(--day-padding)) !important;
-  padding-left: calc(6px + var(--day-padding)) !important;
+  border-start-start-radius: 0 !important;
+  border-end-start-radius: 0 !important;
+  margin-inline-start: calc(-1 * var(--day-padding)) !important;
+  padding-inline-start: calc(6px + var(--day-padding)) !important;
 }
 
 .month-event-pill.all-day.connect-right {
-  border-top-right-radius: 0 !important;
-  border-bottom-right-radius: 0 !important;
-  margin-right: calc(-1 * var(--day-padding)) !important;
-  padding-right: calc(6px + var(--day-padding)) !important;
+  border-start-end-radius: 0 !important;
+  border-end-end-radius: 0 !important;
+  margin-inline-end: calc(-1 * var(--day-padding)) !important;
+  padding-inline-end: calc(6px + var(--day-padding)) !important;
 }
 
 /* Dark/Light text adaptation for month grid */
