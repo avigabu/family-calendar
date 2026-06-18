@@ -1749,6 +1749,18 @@ label {
 
 /* ================= MOBILE LAYOUT & GESTURE COMBACTION (< 800px) ================= */
 @media (max-width: 799px) {
+  body {
+    padding: 0 !important;
+  }
+
+  .app-container {
+    max-width: 100% !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
   :root {
     --day-padding: 2px;
   }
