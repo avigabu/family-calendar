@@ -142,6 +142,8 @@ const TRANSLATIONS = {
     cat_school_vacation: "School Vacation 🎒",
     cat_family_vacation: "Family Vacation 🏖️",
     cat_flight: "Flight ✈️",
+    flight_to: "Flight to",
+    passengers: "passengers",
     filter_label: "Filter:",
     agenda_prefix: "Agenda:",
     no_events_today: "No events scheduled for this day.",
@@ -266,6 +268,8 @@ const TRANSLATIONS = {
     cat_school_vacation: "Schulferien 🎒",
     cat_family_vacation: "Familienurlaub 🏖️",
     cat_flight: "Flug ✈️",
+    flight_to: "Flug nach",
+    passengers: "Passagiere",
     filter_label: "Filtern:",
     agenda_prefix: "Termine:",
     no_events_today: "Keine Termine für diesen Tag geplant.",
@@ -390,6 +394,8 @@ const TRANSLATIONS = {
     cat_school_vacation: "חופשת בית ספר 🎒",
     cat_family_vacation: "חופשה משפחתית 🏖️",
     cat_flight: "טיסה ✈️",
+    flight_to: "טיסה ל",
+    passengers: "נוסעים",
     filter_label: "סינון:",
     agenda_prefix: "סדר יום:",
     no_events_today: "אין אירועים מתוכננים ליום זה.",
@@ -1718,6 +1724,21 @@ function getEventColor(evt) {
   return creator ? creator.color : 'var(--accent-primary)';
 }
 
+function getEventDisplayTitle(evt) {
+  if (evt.category === 'flight') {
+    const dest = evt.flightDestination || evt.title || t('cat_flight');
+    const pax = evt.flightPassengers;
+    const prefix = t('flight_to');
+    const separator = prefix.endsWith('ל') ? '' : ' ';
+    if (pax) {
+      return `${prefix}${separator}${dest}, ${pax}`;
+    } else {
+      return `${prefix}${separator}${dest}`;
+    }
+  }
+  return evt.title;
+}
+
 function renderCalendar() {
   if (!currentFamily) {
     const monthGrid = document.getElementById('monthly-grid');
@@ -1920,7 +1941,7 @@ function renderDailyAgenda() {
       eventsListHtml += `
         <div class="event-card ${isAllDay ? 'all-day' : ''}" style="--event-color: ${color}" onclick="openDetailsModal('${evt.id}')">
           <div class="event-info">
-            <div class="event-title-text">${escapeHtml(evt.title)}</div>
+            <div class="event-title-text">${escapeHtml(getEventDisplayTitle(evt))}</div>
             ${!isAllDay ? `
             <div class="event-time-text">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12">
@@ -2012,7 +2033,7 @@ function renderWeeklyLayout() {
         eventsHtml += `
           <div class="event-card ${isAllDay ? 'all-day' : ''}" style="--event-color: ${color}" onclick="openDetailsModal('${evt.id}')">
             <div class="event-info">
-              <div class="event-title-text">${escapeHtml(evt.title)}</div>
+              <div class="event-title-text">${escapeHtml(getEventDisplayTitle(evt))}</div>
               ${!isAllDay ? `
               <div class="event-time-text">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12">
