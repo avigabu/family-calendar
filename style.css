@@ -1511,6 +1511,10 @@ label {
   border-left: 4px solid var(--success-color);
 }
 
+.toast.toast-info {
+  border-left: 4px solid var(--accent-primary);
+}
+
 /* ================= DESKTOP STYLING (MODALS CENTERED) ================= */
 
 @media (min-width: 601px) {
@@ -2024,6 +2028,11 @@ label {
 
 .theme-light .invite-box {
   background: rgba(0, 0, 0, 0.03);
+}
+
+.theme-light .toast {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
 /* ================= RTL LAYOUT OVERRIDES ================= */
