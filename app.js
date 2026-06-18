@@ -1706,6 +1706,14 @@ function getEventColor(evt) {
       return member.color;
     }
   }
+  
+  if (evt.category === 'school_vacation') {
+    return 'var(--vacation-school)';
+  }
+  if (evt.category === 'family_vacation') {
+    return 'var(--vacation-family)';
+  }
+  
   const creator = familyMembers.find(m => m.id === evt.createdBy);
   return creator ? creator.color : 'var(--accent-primary)';
 }

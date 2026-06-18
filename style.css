@@ -27,6 +27,9 @@
   --success-color: #10b981;
   --success-bg: rgba(16, 185, 129, 0.1);
   
+  --vacation-school: #f59e0b; /* Amber */
+  --vacation-family: #0d9488; /* Teal */
+  
   /* Layout Values */
   --header-height: 50px;
   --nav-height: 68px;
@@ -1980,6 +1983,9 @@ label {
   --danger-border: rgba(239, 68, 68, 0.15);
   
   --success-bg: rgba(16, 185, 129, 0.05);
+  
+  --vacation-school: #d97706; /* Darker Amber */
+  --vacation-family: #0f766e; /* Darker Teal */
 }
 
 .theme-light .app-header {
