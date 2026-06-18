@@ -508,18 +508,22 @@
           </div>
 
           <div class="form-row">
-            <div class="form-group">
-              <label for="event-date" data-i18n="event_date">Date</label>
+            <div class="form-group" id="event-date-wrapper">
+              <label for="event-date" data-i18n="start_date">Start Date</label>
               <input type="text" id="event-date" placeholder="dd/mm/yyyy" maxlength="10" required>
             </div>
-            <div class="form-group">
-              <label for="event-start-time" data-i18n="event_starts">Starts</label>
-              <input type="time" id="event-start-time" required>
+            <div class="form-group" id="event-end-date-wrapper">
+              <label for="event-end-date" data-i18n="end_date">End Date</label>
+              <input type="text" id="event-end-date" placeholder="dd/mm/yyyy" maxlength="10">
             </div>
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
+          <div class="form-row" id="event-time-row">
+            <div class="form-group" id="event-start-time-wrapper">
+              <label for="event-start-time" data-i18n="event_starts">Starts</label>
+              <input type="time" id="event-start-time" required>
+            </div>
+            <div class="form-group" id="event-end-time-wrapper">
               <label for="event-end-time" data-i18n="event_ends">Ends</label>
               <input type="time" id="event-end-time" required>
             </div>
