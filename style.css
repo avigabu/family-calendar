@@ -2355,7 +2355,7 @@ body.modal-open {
   background-color: var(--event-color) !important;
   color: #ffffff !important;
   border-radius: 4px !important;
-  padding: 2px 6px !important;
+  padding: 1px 6px !important;
   margin: 1px 0 !important;
   display: block !important;
   position: relative;
@@ -2366,6 +2366,7 @@ body.modal-open {
   border-top-left-radius: 0 !important;
   border-bottom-left-radius: 0 !important;
   margin-left: calc(-1 * var(--day-padding) - 1px) !important;
+  width: calc(100% + var(--day-padding) + 1px) !important;
   padding-left: calc(6px + var(--day-padding) + 1px) !important;
 }
 
@@ -2373,6 +2374,7 @@ body.modal-open {
   border-top-right-radius: 0 !important;
   border-bottom-right-radius: 0 !important;
   margin-right: calc(-1 * var(--day-padding) - 1px) !important;
+  width: calc(100% + var(--day-padding) + 1px) !important;
   padding-right: calc(6px + var(--day-padding) + 1px) !important;
 }
 
@@ -2380,6 +2382,7 @@ body.modal-open {
   border-radius: 0 !important;
   margin-left: calc(-1 * var(--day-padding) - 1px) !important;
   margin-right: calc(-1 * var(--day-padding) - 1px) !important;
+  width: calc(100% + 2 * var(--day-padding) + 2px) !important;
   padding-left: calc(6px + var(--day-padding) + 1px) !important;
   padding-right: calc(6px + var(--day-padding) + 1px) !important;
 }
@@ -2391,6 +2394,7 @@ body.modal-open {
   border-bottom-right-radius: 0 !important;
   margin-left: 0 !important;
   margin-right: calc(-1 * var(--day-padding) - 1px) !important;
+  width: calc(100% + var(--day-padding) + 1px) !important;
   padding-left: 6px !important;
   padding-right: calc(6px + var(--day-padding) + 1px) !important;
 }
@@ -2401,6 +2405,7 @@ body.modal-open {
   border-bottom-left-radius: 0 !important;
   margin-right: 0 !important;
   margin-left: calc(-1 * var(--day-padding) - 1px) !important;
+  width: calc(100% + var(--day-padding) + 1px) !important;
   padding-right: 6px !important;
   padding-left: calc(6px + var(--day-padding) + 1px) !important;
 }
@@ -2409,6 +2414,7 @@ body.modal-open {
   border-radius: 0 !important;
   margin-left: calc(-1 * var(--day-padding) - 1px) !important;
   margin-right: calc(-1 * var(--day-padding) - 1px) !important;
+  width: calc(100% + 2 * var(--day-padding) + 2px) !important;
   padding-left: calc(6px + var(--day-padding) + 1px) !important;
   padding-right: calc(6px + var(--day-padding) + 1px) !important;
 }
@@ -2416,6 +2422,7 @@ body.modal-open {
 /* Dark/Light text adaptation for month grid */
 .theme-light .month-event-pill.all-day {
   color: #0a0d18 !important;
+  background-color: color-mix(in srgb, var(--event-color) 35%, #ffffff) !important;
 }
 
 /* Weekly/Daily solid highlight event cards */
@@ -2438,6 +2445,7 @@ body.modal-open {
 
 /* Dark/Light text adaptation for solid event cards */
 .theme-light .event-card.all-day {
+  background-color: color-mix(in srgb, var(--event-color) 35%, #ffffff) !important;
   color: #0a0d18 !important;
   border: 1px solid rgba(0, 0, 0, 0.08) !important;
 }
