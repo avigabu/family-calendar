@@ -2357,17 +2357,54 @@ body.modal-open {
 }
 
 .month-event-pill.all-day.connect-left {
-  border-start-start-radius: 0 !important;
-  border-end-start-radius: 0 !important;
-  margin-inline-start: calc(-1 * var(--day-padding)) !important;
-  padding-inline-start: calc(6px + var(--day-padding)) !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  margin-left: calc(-1 * var(--day-padding)) !important;
+  padding-left: calc(6px + var(--day-padding)) !important;
 }
 
 .month-event-pill.all-day.connect-right {
-  border-start-end-radius: 0 !important;
-  border-end-end-radius: 0 !important;
-  margin-inline-end: calc(-1 * var(--day-padding)) !important;
-  padding-inline-end: calc(6px + var(--day-padding)) !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  margin-right: calc(-1 * var(--day-padding)) !important;
+  padding-right: calc(6px + var(--day-padding)) !important;
+}
+
+.month-event-pill.all-day.connect-left.connect-right {
+  border-radius: 0 !important;
+  margin-left: calc(-1 * var(--day-padding)) !important;
+  margin-right: calc(-1 * var(--day-padding)) !important;
+  padding-left: calc(6px + var(--day-padding)) !important;
+  padding-right: calc(6px + var(--day-padding)) !important;
+}
+
+/* RTL overrides for physical connections */
+[dir="rtl"] .month-event-pill.all-day.connect-left {
+  border-radius: 4px !important;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  margin-left: 0 !important;
+  margin-right: calc(-1 * var(--day-padding)) !important;
+  padding-left: 6px !important;
+  padding-right: calc(6px + var(--day-padding)) !important;
+}
+
+[dir="rtl"] .month-event-pill.all-day.connect-right {
+  border-radius: 4px !important;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  margin-right: 0 !important;
+  margin-left: calc(-1 * var(--day-padding)) !important;
+  padding-right: 6px !important;
+  padding-left: calc(6px + var(--day-padding)) !important;
+}
+
+[dir="rtl"] .month-event-pill.all-day.connect-left.connect-right {
+  border-radius: 0 !important;
+  margin-left: calc(-1 * var(--day-padding)) !important;
+  margin-right: calc(-1 * var(--day-padding)) !important;
+  padding-left: calc(6px + var(--day-padding)) !important;
+  padding-right: calc(6px + var(--day-padding)) !important;
 }
 
 /* Dark/Light text adaptation for month grid */
