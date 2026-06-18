@@ -1708,7 +1708,8 @@ label {
 
   .month-day {
     height: 120px; /* Force uniform fixed height on desktop */
-    overflow: hidden;
+    overflow-x: visible;
+    overflow-y: clip;
     padding: var(--day-padding);
   }
 
@@ -1889,7 +1890,8 @@ label {
   /* Uniform day cells on mobile to fit screen exactly */
   .month-day {
     height: 60px;
-    overflow: hidden;
+    overflow-x: visible;
+    overflow-y: clip;
     border-radius: 0;
     padding: var(--day-padding); /* absolute minimum horizontal padding */
   }

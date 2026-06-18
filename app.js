@@ -1880,10 +1880,34 @@ function renderMonthlyGrid() {
       const connectRight = isAllDay && retDate && cellDateStr < retDate && !isLastDayOfWeek;
       const connClass = (connectLeft ? ' connect-left' : '') + (connectRight ? ' connect-right' : '');
       
+      let inlineStyle = `--event-color: ${color};`;
+      if (isAllDay && displayTitle) {
+        // Calculate how many days this event spans inside this current week row
+        const currentWeekDay = cell.date.getDay();
+        let daysLeftInWeek = 0;
+        if (weekStart === 'sunday') {
+          daysLeftInWeek = 7 - currentWeekDay;
+        } else {
+          const mondayDay = (currentWeekDay === 0) ? 6 : currentWeekDay - 1;
+          daysLeftInWeek = 7 - mondayDay;
+        }
+        
+        const cellTime = new Date(cellDateStr).getTime();
+        const retTime = new Date(retDate || cellDateStr).getTime();
+        const msPerDay = 24 * 60 * 60 * 1000;
+        const daysOfEventLeft = Math.round((retTime - cellTime) / msPerDay) + 1;
+        
+        const spanDays = Math.min(daysLeftInWeek, daysOfEventLeft);
+        if (!isNaN(spanDays) && spanDays > 1) {
+          // Set container width to span across all these columns
+          inlineStyle += ` width: calc(${spanDays} * 100% + ${(spanDays - 1) * 2} * var(--day-padding) + ${spanDays - 1}px) !important; z-index: 2;`;
+        }
+      }
+      
       pillsHtml += `
-        <div class="month-event-pill ${isAllDay ? 'all-day' : ''}${connClass}" style="--event-color: ${color}" title="${escapeHtml(evt.title)}">
+        <div class="month-event-pill ${isAllDay ? 'all-day' : ''}${connClass}" style="${inlineStyle}" title="${escapeHtml(getEventDisplayTitle(evt))}">
           ${!isAllDay ? `<span class="pill-time">${shortTime}</span>` : ''}
-          <span class="pill-title">${displayTitle ? escapeHtml(evt.title) : '&nbsp;'}</span>
+          <span class="pill-title">${displayTitle ? escapeHtml(getEventDisplayTitle(evt)) : '&nbsp;'}</span>
         </div>
       `;
     });
