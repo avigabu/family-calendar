@@ -691,8 +691,6 @@ label {
   outline: 1.5px solid var(--accent-primary) !important;
   outline-offset: -1.5px !important;
   background: rgba(99, 102, 241, 0.04) !important;
-  position: relative;
-  z-index: 2;
 }
 
 .day-number {
