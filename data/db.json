@@ -1,0 +1,126 @@
+{
+  "users": [
+    {
+      "id": "usr_sarah",
+      "username": "sarah",
+      "passwordHash": "57cf86e3d86b57fb7596e034969fd24d34f5a485fef7d26f519f0bf8b5483a6546d2069b37a9b7e1d8b798f16ad5a5d8f9d14422e4e24b45395fb14ea480b498",
+      "salt": "3d7fed5c2998003e06e3cdda079d2792",
+      "name": "Sarah (Mom)",
+      "familyId": "fam_adams",
+      "color": "#ec4899"
+    },
+    {
+      "id": "usr_john",
+      "username": "john",
+      "passwordHash": "853598b1611c941fae8d7a440a453be4ecec1ea878a6c265185c7831bab49f656f348f9b483ce411bfb2c58a607a12d07ddea45d53684346f163552ca78f9d20",
+      "salt": "4dbe5ff1839b9e8ea91fb5cc99a72e4a",
+      "name": "John (Dad)",
+      "familyId": "fam_adams",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "usr_leo",
+      "username": "leo",
+      "passwordHash": "e2beab777bc764440c0b9110348edf6d68c9571db8598341759b99bb87062d9fb2a3a9aa6a9ae63c4814abf3f9c47ac9f46da2a00a615ee430c4fd3381277af3",
+      "salt": "c42bb693cac93d8aaddb7da75e578ed5",
+      "name": "Leo (Son)",
+      "familyId": "fam_adams",
+      "color": "#10b981"
+    },
+    {
+      "id": "usr_maya",
+      "username": "maya",
+      "passwordHash": "664b241959c128480f262881f3777a4fcef714c21613a0b27582587f6907aa8e29b91686eaa0764ba0c6e19f0d2e3bb9bb80e5f962ae387bcfc62958640c29f7",
+      "salt": "8ad1bc192f718b85bb8ff3a154a77058",
+      "name": "Maya (Daughter)",
+      "familyId": "fam_adams",
+      "color": "#f59e0b"
+    }
+  ],
+  "families": [
+    {
+      "id": "fam_adams",
+      "name": "Adams Family",
+      "inviteCode": "ADAMS123"
+    }
+  ],
+  "events": [
+    {
+      "id": "evt_1",
+      "familyId": "fam_adams",
+      "createdBy": "usr_sarah",
+      "title": "Weekly Family Dinner 🍽️",
+      "description": "Sunday night dinner. Everyone must attend!",
+      "date": "2026-06-28",
+      "startTime": "18:30",
+      "endTime": "20:30",
+      "category": "fun",
+      "relevantTo": [
+        "usr_sarah",
+        "usr_john",
+        "usr_leo",
+        "usr_maya"
+      ]
+    },
+    {
+      "id": "evt_2",
+      "familyId": "fam_adams",
+      "createdBy": "usr_leo",
+      "title": "Soccer Practice ⚽",
+      "description": "Leo practice session. Dad to drive him.",
+      "date": "2026-06-30",
+      "startTime": "16:00",
+      "endTime": "17:30",
+      "category": "school",
+      "relevantTo": [
+        "usr_leo",
+        "usr_john",
+        "usr_sarah"
+      ]
+    },
+    {
+      "id": "evt_3",
+      "familyId": "fam_adams",
+      "createdBy": "usr_john",
+      "title": "Dentist Appointment 🦷",
+      "description": "Routine checkup for Dad.",
+      "date": "2026-07-01",
+      "startTime": "09:00",
+      "endTime": "10:00",
+      "category": "appointment",
+      "relevantTo": [
+        "usr_john"
+      ]
+    },
+    {
+      "id": "evt_4",
+      "familyId": "fam_adams",
+      "createdBy": "usr_sarah",
+      "title": "Piano Lesson 🎹",
+      "description": "Maya piano practice. Mom driving.",
+      "date": "2026-07-02",
+      "startTime": "15:00",
+      "endTime": "16:00",
+      "category": "school",
+      "relevantTo": [
+        "usr_maya",
+        "usr_sarah"
+      ]
+    },
+    {
+      "id": "evt_5",
+      "familyId": "fam_adams",
+      "createdBy": "usr_sarah",
+      "title": "Date Night ❤️",
+      "description": "Dinner date at the Italian restaurant.",
+      "date": "2026-07-03",
+      "startTime": "20:00",
+      "endTime": "22:30",
+      "category": "fun",
+      "relevantTo": [
+        "usr_sarah",
+        "usr_john"
+      ]
+    }
+  ]
+}

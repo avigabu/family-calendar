@@ -1,0 +1,24 @@
+# Dependency directories
+node_modules/
+functions/node_modules/
+
+# Local env files containing secrets
+.env
+functions/.env
+functions/.env.local
+functions/.env.*.local
+
+# Service account files
+firebase-service-account.json
+
+# IDEs and OS files
+.DS_Store
+.vscode/
+Thumbs.db
+
+# Firebase cache
+.firebase/
+
+# Local logs
+logs.txt
+logs_utf8.txt

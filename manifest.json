@@ -1,0 +1,17 @@
+{
+  "short_name": "SyncUp",
+  "name": "SyncUp Secure Family Calendar",
+  "icons": [
+    {
+      "src": "icon.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#0a0d18",
+  "theme_color": "#0a0d18",
+  "display": "standalone",
+  "orientation": "portrait"
+}

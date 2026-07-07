@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>SyncUp - Secure Family Calendar</title>
+  <meta name="description" content="A secure, beautiful, mobile-first calendar for families to organize events, stay synced, and coordinate schedules.">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=202607061658">
+  
+  <!-- Web App Capabilities & Icon -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SyncUp">
+  <meta name="theme-color" content="#0a0d18">
+</head>
+<body>
+  <!-- Toast Notification System -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- AUTH SCREEN (Shown if not logged in) -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="logo">
+          <img src="icon.png" class="logo-icon-img" alt="SyncUp Logo">
+          <h1>SyncUp</h1>
+        </div>
+        <p class="auth-subtitle">A secure space for family schedules</p>
+      </div>
+
+      <!-- Auth Tabs -->
+      <div class="auth-tabs">
+        <button id="tab-login" class="auth-tab active" onclick="switchAuthTab('login')">Log In</button>
+        <button id="tab-register" class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" class="auth-form active-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label for="login-email">Email Address</label>
+          <input type="email" id="login-email" placeholder="Enter email" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label for="login-password">Password</label>
+            <a href="#" class="forgot-link" onclick="showForgotPassword(event)" style="font-size: 11px; color: var(--accent-primary); text-decoration: none; font-weight: 600;">Forgot Password?</a>
+          </div>
+          <div class="password-wrapper">
+            <input type="password" id="login-password" placeholder="Enter password" required autocomplete="current-password">
+            <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('login-password', this)" aria-label="Toggle password visibility">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">
+          <span>Log In</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+        <div class="auth-divider">
+          <span>or</span>
+        </div>
+        <button type="button" class="btn btn-outline btn-block btn-google" onclick="handleGoogleSignIn()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="register-form" class="auth-form" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label for="register-name">Your Display Name</label>
+          <input type="text" id="register-name" placeholder="e.g. Sarah (Mom)" required>
+        </div>
+        <div class="form-group">
+          <label for="register-email">Your Email Address</label>
+          <input type="email" id="register-email" placeholder="e.g. sarah@adams.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="register-password">Choose Password</label>
+          <div class="password-wrapper">
+            <input type="password" id="register-password" placeholder="Min 6 characters" minlength="6" required autocomplete="new-password">
+            <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('register-password', this)" aria-label="Toggle password visibility">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+
+
+        <div class="form-group join-options">
+          <label>Family Setup</label>
+          <div class="radio-card-group">
+            <label class="radio-card">
+              <input type="radio" name="family-mode" value="create" checked onclick="toggleFamilyInput('create')">
+              <div class="radio-card-content">
+                <span class="radio-title">Create Family</span>
+                <span class="radio-desc">Start a new group</span>
+              </div>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="family-mode" value="join" onclick="toggleFamilyInput('join')">
+              <div class="radio-card-content">
+                <span class="radio-title">Join Family</span>
+                <span class="radio-desc">Use invitation code</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div id="family-create-group" class="form-group">
+          <label for="family-name-input">Family Surname / Group Name</label>
+          <input type="text" id="family-name-input" placeholder="e.g. Adams Family">
+        </div>
+
+        <div id="family-join-group" class="form-group" style="display: none;">
+          <label for="family-code-input">Invitation Code</label>
+          <input type="text" id="family-code-input" placeholder="e.g. FAM-A1B2C3">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          <span>Create Account</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <path d="M5 12h14M12 5l7 7-7 7"/>
+          </svg>
+        </button>
+        <div class="auth-divider">
+          <span>or</span>
+        </div>
+        <button type="button" class="btn btn-outline btn-block btn-google" onclick="handleGoogleSignIn()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- APP VIEW (Shown if logged in) -->
+  <div id="app-view" class="app-container" style="display: none;">
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="header-logo">
+        <img src="icon.png" class="logo-icon-img" alt="SyncUp Logo">
+        <span class="logo-text">SyncUp</span>
+      </div>
+      
+      <div class="family-badge" id="header-family-badge" style="display: none;">
+        <select id="header-family-select" class="family-selector-dropdown" onchange="switchActiveFamily(this.value)">
+          <!-- Loaded dynamically -->
+        </select>
+      </div>
+
+      <div id="header-calendar-nav" class="header-calendar-nav" style="display: none;">
+        <button class="btn-header-nav" onclick="changeDateRange(-1)" title="Previous">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </button>
+        <span id="calendar-title" class="header-calendar-title-text"></span>
+        <button class="btn-header-nav" onclick="changeDateRange(1)" title="Next">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="header-actions">
+        <button id="header-btn-today" class="btn-header-today" onclick="setToday()" title="Go to Today">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+            <circle cx="12" cy="16" r="1.5" fill="currentColor"/>
+          </svg>
+        </button>
+        <div class="calendar-modes">
+          <button id="btn-mode-month" class="btn btn-segmented active" onclick="setCalendarMode('month')" data-i18n="month">Month</button>
+          <button id="btn-mode-week" class="btn btn-segmented" onclick="setCalendarMode('week')" data-i18n="week">Week</button>
+          <button class="btn btn-outline btn-today" onclick="setToday()" data-i18n="today">Today</button>
+        </div>
+        <div class="header-profile" onclick="navigateTo('settings')">
+          <span class="profile-avatar" id="header-avatar">M</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN VIEWS -->
+    <main class="app-main">
+      
+      <!-- VIEW 1: CALENDAR VIEW -->
+      <section id="view-calendar" class="app-section active-section">
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <span class="filter-label" data-i18n="filter_label">Filter:</span>
+          <div class="filter-options" id="calendar-filter-options">
+            <!-- Dynamically populated checkboxes of family members -->
+          </div>
+        </div>
+
+        <!-- Monthly Grid View -->
+        <div id="monthly-calendar-container" class="calendar-container">
+          <div class="month-days-header" id="month-days-header">
+            <div>Sun</div>
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
+          </div>
+          <div id="monthly-grid" class="month-grid">
+            <!-- Populated via Javascript -->
+          </div>
+        </div>
+
+        <!-- Weekly Layout View -->
+        <div id="weekly-calendar-container" class="calendar-container" style="display: none;">
+          <div id="weekly-grid" class="week-grid">
+            <!-- Populated via Javascript -->
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: FAMILY MEMBERS VIEW -->
+      <section id="view-family" class="app-section">
+        <!-- Active Family Hub Panel -->
+        <div id="family-hub-active" class="section-card">
+          <h2 data-i18n="family_hub">Family Hub</h2>
+          <p class="section-subtitle" data-i18n="family_subtitle">Manage group members and invite others</p>
+          
+          <!-- Compact low-profile Invite row -->
+          <div class="compact-invite-row" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 10px 14px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-light); border-radius: var(--radius-sm); margin-bottom: 24px; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+              <span class="invite-label" data-i18n="invite_code_label" style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Invite Code:</span>
+              <span id="family-invite-code" class="invite-code" style="font-family: monospace; font-size: 14px; font-weight: 700; color: var(--vacation-school); letter-spacing: 0.5px; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">---</span>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: nowrap;">
+              <button class="btn btn-outline btn-sm" onclick="copyInviteCode()" style="padding: 6px 12px; font-size: 12px; height: 30px; width: auto; margin: 0; display: flex; align-items: center; gap: 4px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                <span data-i18n="copy">Copy</span>
+              </button>
+              <button class="btn btn-primary btn-sm" onclick="shareInviteLink()" style="padding: 6px 12px; font-size: 12px; height: 30px; width: auto; margin: 0; background: var(--accent-gradient); border: none; display: flex; align-items: center; gap: 4px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+                  <circle cx="18" cy="5" r="3"/>
+                  <circle cx="6" cy="12" r="3"/>
+                  <circle cx="18" cy="19" r="3"/>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                </svg>
+                <span data-i18n="share_link">Share Link</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Members List Header with "+ Add Child" button -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 data-i18n="members" style="margin: 0; font-size: 16px; font-weight: 700;">Members</h3>
+            <button class="btn btn-outline btn-sm" onclick="toggleAddMemberForm()" style="padding: 6px 12px; font-size: 12px; height: 30px; width: auto; margin: 0; display: inline-flex; align-items: center; gap: 4px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span data-i18n="add_member_btn">Add Child</span>
+            </button>
+          </div>
+
+          <!-- Collapsible Add Child form (hidden by default) -->
+          <div id="add-member-collapsible" style="display: none; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 16px;">
+            <h4 style="font-size: 13px; margin: 0 0 12px 0; font-weight: 700;" data-i18n="add_member_no_account">Add Child / Member without Account</h4>
+            <form id="add-member-form" class="add-member-form" onsubmit="handleAddChildMember(event)" style="margin: 0;">
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label for="new-member-name" data-i18n="member_name" style="font-size: 11px; margin-bottom: 4px; display: block;">Member Name</label>
+                <input type="text" id="new-member-name" placeholder="e.g. Leo (Son)" required data-i18n-placeholder="placeholder_member_name" style="padding: 8px 12px; font-size: 13px;">
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button type="submit" class="btn btn-primary btn-sm" style="flex: 1; height: 34px; font-size: 13px; padding: 0;" data-i18n="add_to_group">Add to Group</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="toggleAddMemberForm()" style="width: auto; height: 34px; font-size: 13px;" data-i18n="cancel">Cancel</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="members-list" id="family-members-list" style="margin-bottom: 20px;">
+            <!-- Dynamic family members list -->
+          </div>
+
+          <!-- Collapsible Groups & Circles Accordion Panel -->
+          <div class="groups-circles-accordion" style="border-top: 1px solid var(--border-light); padding-top: 16px; margin-top: 24px;">
+            <details class="collapsible-details" style="cursor: pointer; font-size: 13px;">
+              <summary style="font-weight: 700; color: var(--text-primary); list-style: none; display: flex; justify-content: space-between; align-items: center; outline: none; margin-bottom: 0;">
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 14px;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" style="color: var(--accent-primary);">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                  <span data-i18n="groups_and_circles">Groups & Circles</span>
+                </div>
+                <svg class="details-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12" style="transition: transform 0.2s ease; opacity: 0.7;">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
+              </summary>
+              
+              <div style="margin-top: 16px; display: grid; grid-template-columns: 1fr; gap: 12px;">
+                <form onsubmit="handleCreateFamilyFromHub(event)" style="background: rgba(255, 255, 255, 0.01); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); text-align: left; margin: 0;">
+                  <h4 style="font-size: 13px; margin: 0 0 8px 0; font-weight: 700;" data-i18n="create_new_group">Create a New Group</h4>
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <input type="text" id="hub-create-name-active" placeholder="e.g. Parents & Brothers" required style="padding: 8px 12px; font-size: 13px; height: 34px;" data-i18n-placeholder="placeholder_group_name">
+                  </div>
+                  <button type="submit" class="btn btn-primary btn-sm btn-block" style="height: 34px; font-size: 13px; padding: 0;" data-i18n="create_group">Create Group</button>
+                </form>
+
+                <form onsubmit="handleJoinFamilyFromHub(event)" style="background: rgba(255, 255, 255, 0.01); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--border-light); text-align: left; margin: 0;">
+                  <h4 style="font-size: 13px; margin: 0 0 8px 0; font-weight: 700;" data-i18n="join_existing_group">Join an Existing Group</h4>
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <input type="text" id="hub-join-code-active" placeholder="e.g. FAM-A1B2C3" required style="padding: 8px 12px; font-size: 13px; height: 34px;" data-i18n-placeholder="placeholder_join_code">
+                  </div>
+                  <button type="submit" class="btn btn-outline btn-sm btn-block" style="height: 34px; font-size: 13px; padding: 0;" data-i18n="join_group">Join Group</button>
+                </form>
+              </div>
+            </details>
+          </div>
+        </div>
+
+        <!-- Empty State Family Hub Panel -->
+        <div id="family-hub-empty" class="section-card" style="display: none;">
+          <h2 data-i18n="join_or_create_family">Join or Create a Family</h2>
+          <p class="section-subtitle" data-i18n="no_family_joined_desc">You are not part of any family group yet.</p>
+          
+          <form onsubmit="handleCreateFamilyFromHub(event)" style="margin-bottom: 2rem;">
+            <h3 data-i18n="create_new_family_group">Create a New Family Group</h3>
+            <div class="form-group">
+              <label for="hub-create-name-empty" data-i18n="family_name_label">Family Surname / Group Name</label>
+              <input type="text" id="hub-create-name-empty" placeholder="e.g. Smith Family" required data-i18n-placeholder="placeholder_family_name">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block" data-i18n="create_family_group">Create Family Group</button>
+          </form>
+
+          <div class="add-member-divider">
+            <span data-i18n="or_join_existing_family">Or Join Existing Family</span>
+          </div>
+
+          <form onsubmit="handleJoinFamilyFromHub(event)">
+            <h3 data-i18n="join_with_invite_code">Join with Invite Code</h3>
+            <div class="form-group">
+              <label for="hub-join-code-empty" data-i18n="invite_code_label">Invitation Code</label>
+              <input type="text" id="hub-join-code-empty" placeholder="e.g. FAM-A1B2C3" required data-i18n-placeholder="placeholder_join_code">
+            </div>
+            <button type="submit" class="btn btn-outline btn-block" data-i18n="join_family_group">Join Family Group</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- VIEW 3: SETTINGS VIEW -->
+      <section id="view-settings" class="app-section">
+        <div class="section-card">
+          <h2 id="settings-title" data-i18n="my_profile">My Profile</h2>
+          <div class="profile-details-card">
+            <div class="profile-main-info">
+              <div class="profile-big-avatar" id="settings-avatar" style="background-color: #3b82f6;">S</div>
+              <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <h3 id="settings-user-name">User Name</h3>
+                  <button id="btn-edit-name" class="btn-inline-action" onclick="toggleEditName()" title="Edit Name">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                </div>
+                <p id="settings-username-handle">email@example.com</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-list">
+            <div class="settings-item">
+              <div class="settings-item-info" style="width: 100%;">
+                <span id="settings-label-family" data-i18n="current_family_group">Current Family Group</span>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px; width: 100%;">
+                  <span class="settings-item-value" id="settings-family-name" style="margin-top: 0;">No Family Joined</span>
+                  <button id="btn-edit-family-name" class="btn-inline-action" onclick="toggleEditFamilyName()" title="Edit Family Name" style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-item">
+              <div class="settings-item-info" style="flex: 1; margin-right: 12px;">
+                <span id="label-week-start" data-i18n="start_of_week">Start of Week</span>
+              </div>
+              <select id="settings-week-start" onchange="updateUserSetting('weekStart', this.value)" style="width: auto; padding: 6px 12px; font-size: 13px; height: 32px; border-radius: 6px; border: 1px solid var(--border-light); background: var(--bg-input); color: var(--text-primary); cursor: pointer; outline: none;">
+                <option value="sunday" id="opt-sunday" data-i18n="sunday">Sunday</option>
+                <option value="monday" id="opt-monday" data-i18n="monday">Monday</option>
+              </select>
+            </div>
+
+            <div class="settings-item">
+              <div class="settings-item-info" style="flex: 1; margin-right: 12px;">
+                <span id="label-language" data-i18n="language">Language</span>
+              </div>
+              <select id="settings-language" onchange="updateUserSetting('language', this.value)" style="width: auto; padding: 6px 12px; font-size: 13px; height: 32px; border-radius: 6px; border: 1px solid var(--border-light); background: var(--bg-input); color: var(--text-primary); cursor: pointer; outline: none;">
+                <option value="en">English</option>
+                <option value="de">Deutsch</option>
+                <option value="he">עברית</option>
+              </select>
+            </div>
+
+            <div class="settings-item">
+              <div class="settings-item-info" style="flex: 1; margin-right: 12px;">
+                <span id="label-theme" data-i18n="display_mode">Display Mode</span>
+              </div>
+              <select id="settings-theme" onchange="updateUserSetting('theme', this.value)" style="width: auto; padding: 6px 12px; font-size: 13px; height: 32px; border-radius: 6px; border: 1px solid var(--border-light); background: var(--bg-input); color: var(--text-primary); cursor: pointer; outline: none;">
+                <option value="dark" id="opt-dark" data-i18n="dark_mode">Dark Mode</option>
+                 <option value="light" id="opt-light" data-i18n="light_mode">Light Mode</option>
+              </select>
+            </div>
+
+            <div id="settings-parent-privacy-item" class="settings-item" style="display: none;">
+              <div class="settings-item-info" style="flex: 1; margin-right: 12px;">
+                <span id="label-parent-privacy" data-i18n="parent_privacy_label">Visibility of my events</span>
+                <p id="desc-parent-privacy" style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;" data-i18n="parent_privacy_desc">Determine if non-parents can see events relevant only to me.</p>
+              </div>
+              <select id="settings-parent-privacy" onchange="updateUserSetting('sharePrivateEvents', this.value === 'true')" style="width: auto; padding: 6px 12px; font-size: 13px; height: 32px; border-radius: 6px; border: 1px solid var(--border-light); background: var(--bg-input); color: var(--text-primary); cursor: pointer; outline: none;">
+                <option value="true" id="opt-privacy-show" data-i18n="parent_privacy_show">Show to non-parents</option>
+                <option value="false" id="opt-privacy-hide" data-i18n="parent_privacy_hide">Hide from non-parents</option>
+              </select>
+            </div>
+
+            <div class="settings-item">
+              <div class="settings-item-info" style="flex: 1; margin-right: 12px;">
+                <span id="label-share-app" data-i18n="share_app">Share the App</span>
+                <p id="desc-share-app" style="font-size: 11px; color: var(--text-secondary); margin-top: 2px;" data-i18n="share_app_desc">Share a link to this calendar application with others.</p>
+              </div>
+              <button id="btn-share-app" class="btn btn-outline btn-sm" onclick="shareAppUrl()" style="padding: 6px 12px; font-size: 12px; height: auto; margin: 0; width: auto; flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12">
+                  <circle cx="18" cy="5" r="3"/>
+                  <circle cx="6" cy="12" r="3"/>
+                  <circle cx="18" cy="19" r="3"/>
+                  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                </svg>
+                <span data-i18n="share_link">Share Link</span>
+              </button>
+            </div>
+
+            <!-- Google Calendar Connection Section -->
+            <div class="settings-item" style="display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 16px 0; border-top: 1px solid var(--border-light);">
+              <div class="settings-item-info" style="width: 100%;">
+                <span style="font-weight: 600; font-size: 14px;" data-i18n="google_sync_title">Google Calendar Sync</span>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;" data-i18n="google_sync_desc">Automatically sync your events with Google Calendar.</p>
+              </div>
+              <div id="google-sync-status-container" style="display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 4px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="status-dot" id="google-sync-dot" style="width: 8px; height: 8px; border-radius: 50%; background-color: #6b7280; display: inline-block;"></span>
+                  <span id="google-sync-status-text" style="font-size: 13px; color: var(--text-secondary);" data-i18n="google_status_disconnected">Not Connected</span>
+                </div>
+                <button id="btn-google-sync" class="btn btn-outline btn-sm" onclick="handleGoogleSyncClick()" style="padding: 6px 12px; font-size: 12px; height: auto; margin: 0;">
+                  <span id="google-sync-btn-text" data-i18n="google_btn_connect">Connect</span>
+                </button>
+              </div>
+              <div id="google-sync-target-family-container" style="display: none; flex-direction: column; gap: 6px; width: 100%; margin-top: 8px; border-top: 1px dashed var(--border-light); padding-top: 10px;">
+                <label for="google-sync-target-family" style="font-size: 12px; font-weight: 600; color: var(--text-primary);">Sync Google Primary Calendar To:</label>
+                <select id="google-sync-target-family" onchange="handleTargetFamilyChange(event)" style="width: 100%; padding: 8px; border-radius: var(--radius-sm); background: var(--bg-secondary); border: 1px solid var(--border-light); color: var(--text-primary); font-size: 13px; outline: none; transition: border-color 0.2s;">
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-danger btn-block" onclick="handleLogout()" style="margin-top: 2rem;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+            </svg>
+            <span id="btn-logout-text" data-i18n="log_out">Log Out</span>
+          </button>
+
+          <button id="btn-delete-account" class="btn btn-danger-outline btn-block" onclick="handleDeleteAccount()" style="margin-top: 1rem;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              <line x1="10" y1="11" x2="10" y2="17"/>
+              <line x1="14" y1="11" x2="14" y2="17"/>
+            </svg>
+            <span id="btn-delete-account-text" data-i18n="delete_account">Delete Account</span>
+          </button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FLOATING ACTIONS / NAVIGATION -->
+    <!-- Event Floating Button (Shown in Calendar view) -->
+    <button id="floating-add-btn" class="floating-add-btn" onclick="openEventModal()" aria-label="Add Event">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" width="24" height="24">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+    </button>
+
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <nav class="app-nav">
+      <button id="nav-btn-calendar" class="nav-item active" onclick="navigateTo('calendar')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+        <span id="nav-label-calendar" data-i18n="calendar">Calendar</span>
+      </button>
+
+      <button id="nav-btn-family" class="nav-item" onclick="navigateTo('family')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span id="nav-label-family" data-i18n="family">Family</span>
+      </button>
+
+      <button id="nav-btn-settings" class="nav-item" onclick="navigateTo('settings')">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span id="nav-label-settings" data-i18n="settings">Profile</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- EVENT SLIDE-UP MODAL (Add/Edit Event) -->
+  <div id="event-modal" class="modal-overlay" onclick="closeModalOnOverlayClick(event)">
+    <div class="modal-sheet">
+      <div class="modal-drag-handle"></div>
+      <div class="modal-header">
+        <h3 id="modal-event-title-action">New Event</h3>
+        <button class="btn btn-icon btn-close" onclick="closeEventModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <form id="event-form" class="event-form" onsubmit="handleEventSubmit(event)">
+        <input type="hidden" id="event-form-id">
+        
+        <div class="form-group">
+          <label for="event-category" data-i18n="event_category">Type</label>
+          <select id="event-category" onchange="toggleFlightFields(this.value)">
+            <option value="regular" data-i18n="cat_regular">Regular Event 🗓️</option>
+            <option value="school_vacation" data-i18n="cat_school_vacation">School Vacation 🎒</option>
+            <option value="family_vacation" data-i18n="cat_family_vacation">Family Vacation 🏖️</option>
+            <option value="flight" data-i18n="cat_flight">Flight ✈️</option>
+          </select>
+        </div>
+
+        <div id="standard-fields">
+          <div class="form-group">
+            <label for="event-title" data-i18n="event_title">Title</label>
+            <input type="text" id="event-title" placeholder="e.g. Dinner / Groceries" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" id="event-date-wrapper">
+              <label for="event-date" data-i18n="start_date">Start Date</label>
+              <input type="date" id="event-date" required>
+            </div>
+            <div class="form-group" id="event-end-date-wrapper">
+              <label for="event-end-date" data-i18n="end_date">End Date</label>
+              <input type="date" id="event-end-date">
+            </div>
+          </div>
+
+          <div class="form-row" id="event-time-row">
+            <div class="form-group" id="event-start-time-wrapper">
+              <label for="event-start-time" data-i18n="event_starts">Starts</label>
+              <input type="time" id="event-start-time" lang="en-GB" required>
+            </div>
+            <div class="form-group" id="event-end-time-wrapper">
+              <label for="event-end-time" data-i18n="event_ends">Ends</label>
+              <input type="time" id="event-end-time" lang="en-GB" required>
+            </div>
+          </div>
+
+          <div class="form-row" id="event-recurrence-row">
+            <div class="form-group">
+              <label for="event-recurrence" data-i18n="event_recurrence">Repeat</label>
+              <select id="event-recurrence" onchange="toggleRecurrenceFields(this.value)">
+                <option value="none" data-i18n="recurrence_none">None</option>
+                <option value="daily" data-i18n="recurrence_daily">Daily</option>
+                <option value="weekly" data-i18n="recurrence_weekly">Weekly</option>
+                <option value="monthly" data-i18n="recurrence_monthly">Monthly</option>
+                <option value="yearly" data-i18n="recurrence_yearly">Yearly</option>
+              </select>
+            </div>
+            <div class="form-group" id="recurrence-count-wrapper" style="display: none;">
+              <label for="event-recurrence-count" data-i18n="recurrence_count">Occurrences</label>
+              <input type="number" id="event-recurrence-count" min="1" max="50" value="10">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="event-description" data-i18n="event_description">Description</label>
+            <textarea id="event-description" placeholder="Optional notes..."></textarea>
+          </div>
+        </div>
+
+        <!-- Flight Details Section -->
+        <div id="flight-fields" style="display: none; border-top: 1px solid var(--border-light); padding-top: 12px; margin-top: 12px;">
+          <h4 style="font-size: 13px; font-weight: 700; color: var(--accent-primary); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;" data-i18n="flight_details">Flight Details ✈️</h4>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="flight-dep-date" data-i18n="flight_dep_date">Departure Date</label>
+              <input type="date" id="flight-dep-date">
+            </div>
+            <div class="form-group">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div>
+                  <label for="flight-dep-takeoff" data-i18n="flight_dep_takeoff">Takeoff</label>
+                  <input type="time" id="flight-dep-takeoff" lang="en-GB">
+                </div>
+                <div>
+                  <label for="flight-dep-landing" data-i18n="flight_dep_landing">Landing</label>
+                  <input type="time" id="flight-dep-landing" lang="en-GB">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="flight-ret-date" data-i18n="flight_ret_date">Return Date</label>
+              <input type="date" id="flight-ret-date">
+            </div>
+            <div class="form-group">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <div>
+                  <label for="flight-ret-takeoff" data-i18n="flight_ret_takeoff">Takeoff</label>
+                  <input type="time" id="flight-ret-takeoff" lang="en-GB">
+                </div>
+                <div>
+                  <label for="flight-ret-landing" data-i18n="flight_ret_landing">Landing</label>
+                  <input type="time" id="flight-ret-landing" lang="en-GB">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="flight-passengers" data-i18n="flight_passengers">Who is flying?</label>
+              <input type="text" id="flight-passengers" placeholder="e.g. Mom & Dad" data-i18n-placeholder="flight_passengers_placeholder">
+            </div>
+            <div class="form-group">
+              <label for="flight-destination" data-i18n="flight_destination">Where to?</label>
+              <input type="text" id="flight-destination" placeholder="Destination" data-i18n-placeholder="flight_destination_placeholder">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="flight-booking-ref" data-i18n="flight_booking_ref">Booking Reference</label>
+            <input type="text" id="flight-booking-ref" placeholder="Booking code" style="text-transform: uppercase;" data-i18n-placeholder="flight_booking_ref_placeholder">
+          </div>
+        </div>
+
+        <!-- RELEVANCY ASSIGNMENT (THE KEY REQUIREMENT) -->
+        <div class="form-group">
+          <label data-i18n="event_relevancy_label">Who is this relevant to?</label>
+          <p class="field-help-text" data-i18n="event_relevancy_desc">Select which family members will see this event on their calendar.</p>
+          <div class="relevancy-checkboxes-grid" id="event-relevancy-list">
+            <!-- Populated dynamically with family members -->
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="btn-delete-event" class="btn btn-danger-outline btn-modal" onclick="handleDeleteEvent()" style="display: none;" data-i18n="delete_event">
+            Delete Event
+          </button>
+          <button type="submit" class="btn btn-primary btn-modal" id="btn-submit-event" data-i18n="save_event">
+            Save Event
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- EVENT DETAILS VIEW POPUP (Mobile overlay) -->
+  <div id="details-modal" class="modal-overlay" onclick="closeModalOnOverlayClick(event)">
+    <div class="modal-sheet">
+      <div class="modal-drag-handle"></div>
+      <div class="modal-header">
+        <div class="details-category-badge" id="details-category-badge">Fun 🎉</div>
+        <button class="btn btn-icon btn-close" onclick="closeDetailsModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="details-body">
+        <h2 id="details-title" class="details-title">Event Title</h2>
+        
+        <div class="details-time-row">
+          <svg class="details-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <div>
+            <span id="details-date-text" class="details-date-text">Wednesday, June 10, 2026</span>
+            <span id="details-time-text" class="details-time-text">09:00 - 10:00</span>
+          </div>
+        </div>
+
+        <div class="details-desc-box" id="details-desc-box">
+          <p id="details-description">No description provided.</p>
+        </div>
+
+        <!-- Flight Boarding Pass / Ticket Card -->
+        <div id="details-flight-info" class="flight-ticket-card" style="display: none;">
+          <div class="ticket-header">
+            <div class="ticket-header-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" class="ticket-icon">
+                <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L14 19v-5.5z"/>
+              </svg>
+              <span data-i18n="flight_details">Flight Details</span>
+            </div>
+            <div class="ticket-pnr-container">
+              <span class="pnr-label" data-i18n="flight_booking_ref">Booking Reference</span>
+              <span id="details-flight-booking-ref" class="pnr-code">------</span>
+            </div>
+          </div>
+          
+          <div class="ticket-divider"></div>
+          
+          <div class="ticket-body">
+            <!-- Destination & Passengers Info -->
+            <div class="ticket-row-main">
+              <div class="ticket-destination-box">
+                <span class="ticket-label" data-i18n="flight_destination">Where to?</span>
+                <span id="details-flight-destination" class="ticket-value-highlight">---</span>
+              </div>
+              <div class="ticket-passengers-box">
+                <span class="ticket-label" data-i18n="flight_passengers">Who is flying?</span>
+                <span id="details-flight-passengers" class="ticket-value">---</span>
+              </div>
+            </div>
+            
+            <div class="ticket-sub-divider"></div>
+            
+            <!-- Outbound Flight -->
+            <div class="ticket-flight-leg">
+              <div class="leg-header">
+                <span class="leg-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="transform: rotate(45deg); display: inline-block;" class="leg-icon">
+                    <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L14 19v-5.5z"/>
+                  </svg>
+                  <span data-i18n="flight_dep_date">Departure</span>
+                </span>
+                <span id="details-flight-dep-date" class="leg-date">--/--/----</span>
+              </div>
+              <div class="leg-times">
+                <div class="time-block">
+                  <span class="time-label" data-i18n="flight_dep_takeoff">Takeoff</span>
+                  <span id="details-flight-dep-takeoff" class="time-val">--:--</span>
+                </div>
+                <div class="flight-path-connector">
+                  <div class="flight-line"></div>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12" class="connector-plane">
+                    <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L14 19v-5.5z"/>
+                  </svg>
+                </div>
+                <div class="time-block">
+                  <span class="time-label" data-i18n="flight_dep_landing">Landing</span>
+                  <span id="details-flight-dep-landing" class="time-val">--:--</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Inbound Flight -->
+            <div id="details-flight-ret-container" class="ticket-flight-leg">
+              <div class="ticket-sub-divider"></div>
+              <div class="leg-header">
+                <span class="leg-title">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14" style="transform: rotate(225deg); display: inline-block;" class="leg-icon">
+                    <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L14 19v-5.5z"/>
+                  </svg>
+                  <span data-i18n="flight_ret_date">Return</span>
+                </span>
+                <span id="details-flight-ret-date" class="leg-date">--/--/----</span>
+              </div>
+              <div class="leg-times">
+                <div class="time-block">
+                  <span class="time-label" data-i18n="flight_ret_takeoff">Takeoff</span>
+                  <span id="details-flight-ret-takeoff" class="time-val">--:--</span>
+                </div>
+                <div class="flight-path-connector">
+                  <div class="flight-line"></div>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12" style="transform: scaleX(-1);" class="connector-plane">
+                    <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L14 19v-5.5z"/>
+                  </svg>
+                </div>
+                <div class="time-block">
+                  <span class="time-label" data-i18n="flight_ret_landing">Landing</span>
+                  <span id="details-flight-ret-landing" class="time-val">--:--</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="details-section">
+          <span class="details-section-label" data-i18n="created_by">Created By:</span>
+          <div class="creator-badge">
+            <span class="avatar-dot" id="details-creator-dot"></span>
+            <span id="details-creator-name">John</span>
+          </div>
+        </div>
+
+        <div class="details-section">
+          <span class="details-section-label" data-i18n="visible_to">Visible to:</span>
+          <div class="details-members-tags" id="details-members-tags">
+            <!-- Dynamically populated avatar tags -->
+          </div>
+        </div>
+
+        <div class="modal-actions details-actions">
+          <button class="btn btn-danger-outline btn-modal" onclick="deleteEventFromDetails()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              <line x1="10" y1="11" x2="10" y2="17"/>
+              <line x1="14" y1="11" x2="14" y2="17"/>
+            </svg>
+            <span data-i18n="delete_event">Delete Event</span>
+          </button>
+          <button class="btn btn-outline btn-modal" onclick="editEventFromDetails()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+            </svg>
+            <span data-i18n="edit_event">Edit Event</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORGOT PASSWORD MODAL -->
+  <div id="forgot-modal" class="modal-overlay" onclick="closeModalOnOverlayClick(event)">
+    <div class="modal-sheet" style="max-width: 400px; margin: auto;">
+      <div class="modal-header">
+        <h3>Reset Password</h3>
+        <button class="btn btn-icon btn-close" onclick="closeForgotPassword()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Verification Form -->
+      <form id="forgot-verify-form" onsubmit="handleForgotPasswordVerify(event)">
+        <p class="field-help-text" style="margin-bottom: 16px;">Enter your email to receive a password reset link.</p>
+        <div class="form-group">
+          <label for="forgot-email">Email Address</label>
+          <input type="email" id="forgot-email" placeholder="e.g. sarah@adams.com" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Send Reset Link</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- GOOGLE SYNC ONBOARDING MODAL -->
+  <div id="google-onboarding-modal" class="modal-overlay" onclick="closeModalOnOverlayClick(event)">
+    <div class="modal-sheet" style="max-width: 400px; margin: auto;">
+      <div class="modal-header">
+        <h3>Connect Google Calendar</h3>
+        <button class="btn btn-icon btn-close" onclick="closeGoogleOnboarding()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="20" height="20">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      
+      <form id="google-onboarding-form" onsubmit="handleGoogleOnboardingSubmit(event)">
+        <p class="field-help-text" style="margin-bottom: 16px;">Choose which family group you want to sync with your primary Google Calendar. This group will also become your default group in the web app.</p>
+        <div class="form-group">
+          <label for="google-onboarding-target-family">Primary Synced Family</label>
+          <select id="google-onboarding-target-family" required style="width: 100%; padding: 8px; border-radius: var(--radius-sm); background: var(--bg-secondary); border: 1px solid var(--border-light); color: var(--text-primary); font-size: 13px; outline: none;"></select>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 16px;">Confirm & Sync</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- CUSTOM CONFIRMATION DIALOG -->
+  <div id="confirm-modal" class="modal-overlay" style="display: none; z-index: 2000;" onclick="event.stopPropagation()">
+    <div class="modal-sheet" style="max-width: 400px; margin: auto; text-align: center; padding: 24px;">
+      <h3 id="confirm-title" style="margin-bottom: 12px; font-size: 18px; font-weight: 700; color: var(--text-primary);">Confirmation</h3>
+      <p id="confirm-message" style="margin-bottom: 24px; font-size: 14px; color: var(--text-secondary); line-height: 1.5; text-align: center;"></p>
+      <div class="modal-actions" style="display: flex; gap: 12px; justify-content: center;">
+        <button id="btn-confirm-cancel" class="btn btn-outline" style="flex: 1;"></button>
+        <button id="btn-confirm-ok" class="btn btn-primary" style="flex: 1;"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase Compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  
+  <script src="app.js?v=202607061658"></script>
+</body>
+</html>
