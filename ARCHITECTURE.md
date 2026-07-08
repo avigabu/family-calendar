@@ -154,6 +154,7 @@ To prevent synchronization conflict loops and duplicate events when interfacing 
 | July 2026 | Google Recurrence Mapping | Map Google Calendar `recurringEventId` to Firestore `recurrenceId` in backend sync triggers to link external recurring series in the web app. |
 | July 2026 | Recurrence Data Migration | Configured sync engine to automatically update existing Firestore event documents with recurrence links when they are pulled from Google. |
 | July 2026 | Default Family & Visibility | Set startup active family to primary settings default. Enabled role-based default visible event filters (parents see all, child sees only self). |
+| July 2026 | Schema Validation Rules | Added Firestore Security Rules to enforce strict validation for event document schemas (familyId, createdBy, title, date matching regex, category enum, relevantTo list) and added corresponding client-side validation toast warnings. |
 
 ---
 

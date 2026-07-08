@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper to check if user is signed in
+    function signedIn() {
+      return request.auth != null;
+    }
+    
+    // Users collection rules
+    match /users/{userId} {
+      allow read, write: if signedIn();
+    }
+    
+    // Families collection rules
+    match /families/{familyId} {
+      allow read, write: if signedIn();
+    }
+    
+    // Events collection rules with schema validation
+    match /events/{eventId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn()
+        && request.resource.data.familyId is string && request.resource.data.familyId != ""
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.title is string && request.resource.data.title != ""
+        && request.resource.data.date is string && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && request.resource.data.category in ['regular', 'flight', 'school_vacation', 'family_vacation']
+        && request.resource.data.relevantTo is list;
+      allow delete: if signedIn();
+    }
+  }
+}

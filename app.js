@@ -234,7 +234,8 @@ const TRANSLATIONS = {
     confirm_edit_series: "This event is part of a recurring series. Do you want to apply changes to the entire series?",
     confirm_delete_series: "This event is part of a recurring series. Do you want to delete the entire series?",
     yes: "Yes",
-    only_this_event: "This event only"
+    only_this_event: "This event only",
+    validation_error: "Database Validation Failed: Please ensure all fields (title, date, category) are filled correctly and you have permission."
   },
   de: {
     calendar: "Kalender",
@@ -396,7 +397,8 @@ const TRANSLATIONS = {
     confirm_edit_series: "Dieses Ereignis ist Teil einer wiederkehrenden Serie. Möchten Sie die Änderungen auf die gesamte Serie anwenden?",
     confirm_delete_series: "Dieses Ereignis ist Teil einer wiederkehrenden Serie. Möchten Sie die gesamte Serie löschen?",
     yes: "Ja",
-    only_this_event: "Nur dieses Ereignis"
+    only_this_event: "Nur dieses Ereignis",
+    validation_error: "Datenbank-Validierung fehlgeschlagen: Bitte stellen Sie sicher, dass alle Felder (Titel, Datum, Kategorie) korrekt ausgefüllt sind und Sie die Berechtigung haben."
   },
   he: {
     calendar: "לוח שנה",
@@ -558,7 +560,8 @@ const TRANSLATIONS = {
     confirm_edit_series: "אירוע זה הוא חלק מסדרה חוזרת. האם ברצונך להחיל את השינויים על כל הסדרה?",
     confirm_delete_series: "אירוע זה הוא חלק מסדרה חוזרת. האם ברצונך למחוק את כל הסדרה?",
     yes: "כן",
-    only_this_event: "אירוע זה בלבד"
+    only_this_event: "אירוע זה בלבד",
+    validation_error: "שגיאת אימות נתונים: אנא ודא שכל השדות (כותרת, תאריך, סוג) מלאים כראוי ושיש לך הרשאות מתאימות."
   }
 };
 
@@ -3200,7 +3203,12 @@ async function handleEventSubmit(e) {
     }
     closeEventModal();
   } catch (err) {
-    showToast(err.message, 'error');
+    console.error("Firestore operation failed:", err);
+    if (err.code === 'permission-denied') {
+      showToast(t('validation_error'), 'error');
+    } else {
+      showToast(err.message, 'error');
+    }
   } finally {
     submitButton.innerText = t('save_event');
     submitButton.disabled = false;
