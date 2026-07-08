@@ -7,6 +7,7 @@ let familyMembers = [];       // Array of user profiles belonging to the active 
 let events = [];              // Array of events belonging to the active family
 let activeFilters = [];       // User IDs that are visible on the calendar
 let userFamilies = [];        // List of family documents the current user belongs to
+let isFirstLoad = true;
 
 let activeView = 'calendar'; // 'calendar' | 'family' | 'settings'
 let calendarMode = 'month';  // 'month' | 'week'
@@ -83,6 +84,9 @@ const TRANSLATIONS = {
     my_profile: "My Profile",
     current_family_group: "Current Family Group",
     no_family_joined: "No Family Joined",
+    primary_family: "Primary Family Group",
+    primary_family_desc: "Default family shown when the app opens.",
+    no_primary_family: "None",
     start_of_week: "Start of Week",
     language: "Language",
     display_mode: "Display Mode",
@@ -242,6 +246,9 @@ const TRANSLATIONS = {
     my_profile: "Mein Profil",
     current_family_group: "Aktuelle Familiengruppe",
     no_family_joined: "Keiner Familie beigetreten",
+    primary_family: "Primäre Familiengruppe",
+    primary_family_desc: "Standardmäßig angezeigte Familiengruppe beim Starten der App.",
+    no_primary_family: "Keine",
     start_of_week: "Wochenbeginn",
     language: "Sprache",
     display_mode: "Anzeigemodus",
@@ -401,6 +408,9 @@ const TRANSLATIONS = {
     my_profile: "הפרופיל שלי",
     current_family_group: "קבוצה משפחתית",
     no_family_joined: "לא הצטרפת למשפחה",
+    primary_family: "קבוצה משפחתית ראשית",
+    primary_family_desc: "הקבוצה שתוצג כברירת מחדל בעת פתיחת האפליקציה.",
+    no_primary_family: "ללא",
     start_of_week: "תחילת השבוע",
     language: "שפה",
     display_mode: "מצב תצוגה",
@@ -618,6 +628,38 @@ function applyUserSettings() {
       }
     } else {
       parentPrivacyItem.style.display = 'none';
+    }
+  }
+
+  // 2.7 Primary family settings select
+  const primaryFamilyItem = document.getElementById('settings-primary-family-item');
+  if (primaryFamilyItem) {
+    if (userFamilies && userFamilies.length > 0) {
+      primaryFamilyItem.style.display = 'flex';
+      const selectPrimary = document.getElementById('settings-primary-family');
+      if (selectPrimary) {
+        selectPrimary.innerHTML = '';
+        
+        const optNone = document.createElement('option');
+        optNone.value = '';
+        optNone.innerText = t('no_primary_family') || 'None';
+        if (!settings.primaryFamilyId) {
+          optNone.selected = true;
+        }
+        selectPrimary.appendChild(optNone);
+        
+        userFamilies.forEach(f => {
+          const opt = document.createElement('option');
+          opt.value = f.id;
+          opt.innerText = f.name;
+          if (settings.primaryFamilyId === f.id) {
+            opt.selected = true;
+          }
+          selectPrimary.appendChild(opt);
+        });
+      }
+    } else {
+      primaryFamilyItem.style.display = 'none';
     }
   }
   
@@ -873,12 +915,31 @@ async function loadUserFamilies() {
     userFamilies = tempFamilies;
     
     if (userFamilies.length > 0) {
+      const primaryFamilyId = userProfile.settings?.primaryFamilyId;
       const savedActive = localStorage.getItem('syncup_active_family_id');
-      if (savedActive && userFamilies.some(f => f.id === savedActive)) {
-        activeFamilyId = savedActive;
+      
+      if (isFirstLoad) {
+        isFirstLoad = false;
+        if (primaryFamilyId && userFamilies.some(f => f.id === primaryFamilyId)) {
+          activeFamilyId = primaryFamilyId;
+          localStorage.setItem('syncup_active_family_id', activeFamilyId);
+        } else if (savedActive && userFamilies.some(f => f.id === savedActive)) {
+          activeFamilyId = savedActive;
+        } else {
+          activeFamilyId = userFamilies[0].id;
+          localStorage.setItem('syncup_active_family_id', activeFamilyId);
+        }
       } else {
-        activeFamilyId = userFamilies[0].id;
-        localStorage.setItem('syncup_active_family_id', activeFamilyId);
+        if (!activeFamilyId || !userFamilies.some(f => f.id === activeFamilyId)) {
+          if (primaryFamilyId && userFamilies.some(f => f.id === primaryFamilyId)) {
+            activeFamilyId = primaryFamilyId;
+          } else if (savedActive && userFamilies.some(f => f.id === savedActive)) {
+            activeFamilyId = savedActive;
+          } else {
+            activeFamilyId = userFamilies[0].id;
+          }
+          localStorage.setItem('syncup_active_family_id', activeFamilyId);
+        }
       }
       currentFamily = userFamilies.find(f => f.id === activeFamilyId);
       
@@ -906,7 +967,7 @@ async function loadUserFamilies() {
     // Check for pending onboarding
     if (sessionStorage.getItem("pending_google_sync_onboarding") === "true") {
       sessionStorage.removeItem("pending_google_sync_onboarding");
-      openGoogleOnboarding();
+      handleGoogleOnboardingFlow();
     }
 
     // Check for pending invite code
@@ -1015,6 +1076,8 @@ function setupActiveFamilyListeners() {
   if (membersUnsubscribe) membersUnsubscribe();
   if (familyUnsubscribe) familyUnsubscribe();
   
+  activeFilters = [];
+  
   if (!activeFamilyId) return;
   
   familyUnsubscribe = dbFirestore.collection("families").doc(activeFamilyId)
@@ -1055,10 +1118,20 @@ function setupActiveFamilyListeners() {
       
       const newMemberIds = familyMembers.map(m => m.id);
       if (!activeFilters || activeFilters.length === 0) {
-        activeFilters = newMemberIds;
+        if (isUserParent(currentUser.uid)) {
+          activeFilters = newMemberIds;
+        } else {
+          activeFilters = [currentUser.uid];
+        }
       } else {
         activeFilters = activeFilters.filter(id => newMemberIds.includes(id));
-        if (activeFilters.length === 0) activeFilters = newMemberIds;
+        if (activeFilters.length === 0) {
+          if (isUserParent(currentUser.uid)) {
+            activeFilters = newMemberIds;
+          } else {
+            activeFilters = [currentUser.uid];
+          }
+        }
       }
       
       updateFilterBarMarkup();
@@ -3682,8 +3755,6 @@ function updateGoogleSyncUI() {
   const text = document.getElementById("google-sync-status-text");
   const btn = document.getElementById("btn-google-sync");
   const btnText = document.getElementById("google-sync-btn-text");
-  const targetContainer = document.getElementById("google-sync-target-family-container");
-  const targetSelect = document.getElementById("google-sync-target-family");
 
   if (!dot || !text || !btn || !btnText) return;
 
@@ -3693,79 +3764,11 @@ function updateGoogleSyncUI() {
     text.innerText = `${t("google_status_connected")} (${syncData.googleEmail})`;
     btn.className = "btn btn-danger-outline btn-sm";
     btnText.innerText = t("google_btn_disconnect");
-
-    if (targetContainer && targetSelect) {
-      targetContainer.style.display = "flex";
-      targetSelect.innerHTML = "";
-      
-      if (userFamilies.length === 0) {
-        const opt = document.createElement("option");
-        opt.value = "";
-        opt.innerText = "No families joined";
-        opt.disabled = true;
-        targetSelect.appendChild(opt);
-      } else {
-        userFamilies.forEach(f => {
-          const opt = document.createElement("option");
-          opt.value = f.id;
-          opt.innerText = f.name;
-          if (f.id === (syncData.targetFamilyId || activeFamilyId)) {
-            opt.selected = true;
-          }
-          targetSelect.appendChild(opt);
-        });
-
-        // Initialize targetFamilyId in Firestore if not set yet
-        if (!syncData.targetFamilyId && currentUser) {
-          const defaultTarget = targetSelect.value || activeFamilyId;
-          if (defaultTarget) {
-            dbFirestore.collection("users").doc(currentUser.uid).update({
-              "googleSync.targetFamilyId": defaultTarget
-            }).catch(e => console.error("Failed to initialize targetFamilyId:", e));
-          }
-        }
-      }
-    }
   } else {
     dot.style.backgroundColor = "#6b7280";
     text.innerText = t("google_status_disconnected");
     btn.className = "btn btn-outline btn-sm";
     btnText.innerText = t("google_btn_connect");
-
-    if (targetContainer) {
-      targetContainer.style.display = "none";
-    }
-  }
-}
-
-async function handleTargetFamilyChange(e) {
-  if (!currentUser) return;
-  const targetFamilyId = e.target.value;
-  if (!targetFamilyId) return;
-  
-  try {
-    await dbFirestore.collection("users").doc(currentUser.uid).update({
-      "googleSync.targetFamilyId": targetFamilyId
-    });
-    showToast('Google Sync group updated! Syncing events...', 'info');
-    
-    // Trigger sync immediately
-    const res = await fetch(`${getApiBaseUrl()}/google/sync`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ userId: currentUser.uid })
-    });
-    const data = await res.json();
-    if (data.success) {
-      showToast('Sync completed successfully!', 'success');
-    } else {
-      throw new Error(data.error || 'Failed to sync');
-    }
-  } catch (err) {
-    console.error("Failed to update Google sync target:", err);
-    showToast("Error: " + err.message, "error");
   }
 }
 
@@ -3821,6 +3824,62 @@ async function handleGoogleSyncClick() {
   }
 }
 
+async function handleGoogleOnboardingFlow() {
+  if (!currentUser) return;
+  
+  const primaryFamilyId = userProfile?.settings?.primaryFamilyId;
+  
+  // Case 1: Only 1 family, OR a primary family is already chosen
+  if (userFamilies.length <= 1 || (primaryFamilyId && userFamilies.some(f => f.id === primaryFamilyId))) {
+    const targetFamilyId = (primaryFamilyId && userFamilies.some(f => f.id === primaryFamilyId)) ? primaryFamilyId : (userFamilies[0]?.id || "");
+    if (!targetFamilyId) {
+      showToast("Cannot complete Google Sync: Please join a family first.", "error");
+      return;
+    }
+    
+    try {
+      showToast("Setting up Google Sync...", "info");
+      
+      // Update targetFamilyId in Google Sync settings
+      await dbFirestore.collection("users").doc(currentUser.uid).update({
+        "googleSync.targetFamilyId": targetFamilyId
+      });
+      
+      // If we don't have a primary family set yet (i.e. only 1 family case), set it now
+      if (!userProfile.settings?.primaryFamilyId) {
+        if (!userProfile.settings) userProfile.settings = {};
+        userProfile.settings.primaryFamilyId = targetFamilyId;
+        await dbFirestore.collection("users").doc(currentUser.uid).update({
+          settings: userProfile.settings
+        });
+      }
+      
+      await switchActiveFamily(targetFamilyId);
+      
+      // Trigger initial sync via API
+      const res = await fetch(`${getApiBaseUrl()}/google/sync`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ userId: currentUser.uid })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("Google Calendar sync setup completed!", "success");
+      } else {
+        throw new Error(data.error || "Failed to trigger sync");
+      }
+    } catch (err) {
+      console.error("Failed to complete Google Sync setup:", err);
+      showToast("Error: " + err.message, "error");
+    }
+  } else {
+    // Case 2: More than 1 family AND the primary family is not chosen yet -> Prompt!
+    openGoogleOnboarding();
+  }
+}
+
 function openGoogleOnboarding() {
   const modal = document.getElementById("google-onboarding-modal");
   const select = document.getElementById("google-onboarding-target-family");
@@ -3859,20 +3918,21 @@ async function handleGoogleOnboardingSubmit(e) {
   if (!targetFamilyId) return;
 
   try {
-    showToast("Setting default group and syncing...", "info");
+    showToast("Setting primary family and syncing...", "info");
     
-    // 1. Save targetFamilyId in Firestore user document
+    // Save both targetFamilyId (for sync) and primaryFamilyId (for startup default)
+    if (!userProfile.settings) userProfile.settings = {};
+    userProfile.settings.primaryFamilyId = targetFamilyId;
+    
     await dbFirestore.collection("users").doc(currentUser.uid).update({
-      "googleSync.targetFamilyId": targetFamilyId
+      "googleSync.targetFamilyId": targetFamilyId,
+      "settings": userProfile.settings
     });
 
-    // 2. Set this group as the default active group in the web app
     await switchActiveFamily(targetFamilyId);
-
-    // Close modal
     closeGoogleOnboarding();
 
-    // 3. Trigger initial sync via api
+    // Trigger initial sync via API
     const res = await fetch(`${getApiBaseUrl()}/google/sync`, {
       method: "POST",
       headers: {
