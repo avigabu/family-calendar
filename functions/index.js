@@ -178,6 +178,42 @@ function calculateEventHash(event) {
 }
 
 /**
+ * Parses the event description to reconstruct the relevantTo list from the "Family Members:" line.
+ * If not found or if set to "Everyone", defaults to ["all"].
+ */
+async function parseRelevantToFromDescription(description, familyId, fallbackUserId) {
+  if (!description) return ["all"];
+  
+  const match = /Family Members:\s*(.+)$/i.exec(description);
+  if (!match) return ["all"];
+  
+  const namesStr = match[1].trim();
+  if (namesStr.toLowerCase() === "everyone") {
+    return ["all"];
+  }
+  
+  const names = namesStr.split(",").map(n => n.trim().toLowerCase());
+  const relevantTo = [];
+  
+  try {
+    const membersSnap = await db.collection("users")
+      .where("families", "array-contains", familyId)
+      .get();
+      
+    for (const doc of membersSnap.docs) {
+      const memberData = doc.data();
+      if (memberData.name && names.includes(memberData.name.trim().toLowerCase())) {
+        relevantTo.push(doc.id);
+      }
+    }
+  } catch (err) {
+    console.error(`[parseRelevantToFromDescription] Error looking up family members for ${familyId}:`, err);
+  }
+  
+  return relevantTo.length > 0 ? relevantTo : ["all"];
+}
+
+/**
  * Returns the OAuth2 client configured with dynamic redirects
  */
 function getOAuth2Client(customRedirectUri) {
@@ -364,23 +400,13 @@ async function triggerInitialSync(userId, userGoogleSync) {
     if (familyId) {
       if (familyId === defaultTargetFamilyId) {
         // Shared group events in default group go to secondary calendar, personal/child events go to primary
-        let hasOtherNonChildMembers = false;
+        let isSharedEvent = false;
         if (Array.isArray(eventData.relevantTo)) {
-          if (eventData.relevantTo.includes("all")) {
-            hasOtherNonChildMembers = true;
-          } else {
-            for (const rId of eventData.relevantTo) {
-              if (rId !== userId) {
-                const memberDoc = await db.collection("users").doc(rId).get();
-                if (memberDoc.exists && !memberDoc.data().isChild) {
-                  hasOtherNonChildMembers = true;
-                  break;
-                }
-              }
-            }
+          if (eventData.relevantTo.includes("all") || eventData.relevantTo.length > 1) {
+            isSharedEvent = true;
           }
         }
-        if (hasOtherNonChildMembers) {
+        if (isSharedEvent) {
           const mappedId = await ensureFamilyCalendar(userId, userGoogleSync, familyId, calendar);
           if (mappedId) targetCalendarId = mappedId;
         } else {
@@ -620,7 +646,7 @@ async function triggerInitialSync(userId, userGoogleSync) {
         const targetFamilyId = cal.familyId || userGoogleSync.targetFamilyId || userFamiliesList[0];
 
         if (cal.type === "family" && targetFamilyId) {
-          relevantTo = ["all"];
+          relevantTo = await parseRelevantToFromDescription(gEvent.description || "", targetFamilyId, userId);
         } else if (cal.type === "primary" && targetFamilyId) {
           // If pulling from primary, check for child prefix matching
           let childUserId = null;
@@ -1234,23 +1260,13 @@ exports.syncFirestoreToGoogle = onDocumentWritten("events/{eventId}", async (eve
     if (familyId) {
       if (familyId === defaultTargetFamilyId) {
         // Shared group events in default group go to secondary calendar, personal/child events go to primary
-        let hasOtherNonChildMembers = false;
+        let isSharedEvent = false;
         if (afterData && Array.isArray(afterData.relevantTo)) {
-          if (afterData.relevantTo.includes("all")) {
-            hasOtherNonChildMembers = true;
-          } else {
-            for (const rId of afterData.relevantTo) {
-              if (rId !== userId) {
-                const memberDoc = await db.collection("users").doc(rId).get();
-                if (memberDoc.exists && !memberDoc.data().isChild) {
-                  hasOtherNonChildMembers = true;
-                  break;
-                }
-              }
-            }
+          if (afterData.relevantTo.includes("all") || afterData.relevantTo.length > 1) {
+            isSharedEvent = true;
           }
         }
-        if (hasOtherNonChildMembers) {
+        if (isSharedEvent) {
           const mappedId = await ensureFamilyCalendar(userId, user.googleSync, familyId, calendar);
           if (mappedId) targetCalendarId = mappedId;
         } else {
@@ -1617,7 +1633,7 @@ exports.syncGoogleToFirestore = onSchedule("every 5 minutes", async (event) => {
             const targetFamilyId = cal.familyId || user.googleSync.targetFamilyId || user.families[0];
             
             if (cal.type === "family" && targetFamilyId) {
-              relevantTo = ["all"];
+              relevantTo = await parseRelevantToFromDescription(gEvent.description || "", targetFamilyId, userId);
             } else if (cal.type === "primary" && targetFamilyId) {
               let childUserId = null;
               if (match) {
