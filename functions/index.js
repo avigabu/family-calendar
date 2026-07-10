@@ -523,46 +523,37 @@ async function triggerInitialSync(userId, userGoogleSync) {
     });
   }
 
-  // Auto-detect and sync personal secondary calendars matching family members names
-  if (userFamiliesList.length > 0) {
-    try {
-      const membersSnap = await db.collection("users")
-        .where("families", "array-contains-any", userFamiliesList)
-        .get();
-      
+  // Auto-detect and sync personal secondary calendars matching the syncing user's name only
+  try {
+    const memberName = userData.name;
+    if (memberName) {
       const calList = await calendar.calendarList.list();
       const googleCalendars = calList.data.items || [];
 
-      for (const memberDoc of membersSnap.docs) {
-        const memberData = memberDoc.data();
-        const memberName = memberData.name;
-        if (!memberName) continue;
+      const matchedCal = googleCalendars.find(c => {
+        const summary = c.summary;
+        if (!summary) return false;
+        const calName = summary.trim().toLowerCase();
+        const memName = memberName.trim().toLowerCase();
+        const firstWord = memName.split(/\s+/)[0];
+        return calName === memName || calName === firstWord;
+      });
 
-        const matchedCal = googleCalendars.find(c => {
-          const summary = c.summary;
-          if (!summary) return false;
-          const calName = summary.trim().toLowerCase();
-          const memName = memberName.trim().toLowerCase();
-          const firstWord = memName.split(/\s+/)[0];
-          return calName === memName || calName === firstWord;
-        });
-
-        if (matchedCal && matchedCal.id !== "primary" && !Object.values(userGoogleSync.calendars || {}).includes(matchedCal.id)) {
-          // Avoid duplicate calendars in sync list
-          if (!calendarsToSync.some(c => c.id === matchedCal.id)) {
-            calendarsToSync.push({
-              id: matchedCal.id,
-              type: "member",
-              familyId: targetFamilyId,
-              memberUserId: memberDoc.id
-            });
-            console.log(`[INITIAL SYNC] Detected secondary calendar "${matchedCal.summary}" for member "${memberName}". Adding to sync list.`);
-          }
+      if (matchedCal && matchedCal.id !== "primary" && !Object.values(userGoogleSync.calendars || {}).includes(matchedCal.id)) {
+        // Avoid duplicate calendars in sync list
+        if (!calendarsToSync.some(c => c.id === matchedCal.id)) {
+          calendarsToSync.push({
+            id: matchedCal.id,
+            type: "member",
+            familyId: targetFamilyId,
+            memberUserId: userId
+          });
+          console.log(`[INITIAL SYNC] Detected secondary calendar "${matchedCal.summary}" for user "${memberName}". Adding to sync list.`);
         }
       }
-    } catch (err) {
-      console.error("[INITIAL SYNC] Failed to auto-detect member secondary calendars:", err);
     }
+  } catch (err) {
+    console.error("[INITIAL SYNC] Failed to auto-detect user secondary calendars:", err);
   }
 
   const threeYearsAgo = new Date();
@@ -1501,46 +1492,37 @@ exports.syncGoogleToFirestore = onSchedule("every 5 minutes", async (event) => {
       });
     }
 
-    // Auto-detect and sync personal secondary calendars matching family members names
-    if (userFamiliesList.length > 0) {
-      try {
-        const membersSnap = await db.collection("users")
-          .where("families", "array-contains-any", userFamiliesList)
-          .get();
-        
+    // Auto-detect and sync personal secondary calendars matching the syncing user's name only
+    try {
+      const memberName = user.name;
+      if (memberName) {
         const calList = await calendar.calendarList.list();
         const googleCalendars = calList.data.items || [];
 
-        for (const memberDoc of membersSnap.docs) {
-          const memberData = memberDoc.data();
-          const memberName = memberData.name;
-          if (!memberName) continue;
+        const matchedCal = googleCalendars.find(c => {
+          const summary = c.summary;
+          if (!summary) return false;
+          const calName = summary.trim().toLowerCase();
+          const memName = memberName.trim().toLowerCase();
+          const firstWord = memName.split(/\s+/)[0];
+          return calName === memName || calName === firstWord;
+        });
 
-          const matchedCal = googleCalendars.find(c => {
-            const summary = c.summary;
-            if (!summary) return false;
-            const calName = summary.trim().toLowerCase();
-            const memName = memberName.trim().toLowerCase();
-            const firstWord = memName.split(/\s+/)[0];
-            return calName === memName || calName === firstWord;
-          });
-
-          if (matchedCal && matchedCal.id !== "primary" && !Object.values(user.googleSync.calendars || {}).includes(matchedCal.id)) {
-            // Avoid duplicate calendars in sync list
-            if (!calendarsToSync.some(c => c.id === matchedCal.id)) {
-              calendarsToSync.push({
-                id: matchedCal.id,
-                type: "member",
-                familyId: targetFamilyId,
-                memberUserId: memberDoc.id
-              });
-              console.log(`[SYNC RUN] Detected secondary calendar "${matchedCal.summary}" for member "${memberName}". Adding to sync list.`);
-            }
+        if (matchedCal && matchedCal.id !== "primary" && !Object.values(user.googleSync.calendars || {}).includes(matchedCal.id)) {
+          // Avoid duplicate calendars in sync list
+          if (!calendarsToSync.some(c => c.id === matchedCal.id)) {
+            calendarsToSync.push({
+              id: matchedCal.id,
+              type: "member",
+              familyId: targetFamilyId,
+              memberUserId: userId
+            });
+            console.log(`[SYNC RUN] Detected secondary calendar "${matchedCal.summary}" for user "${memberName}". Adding to sync list.`);
           }
         }
-      } catch (err) {
-        console.error("[SYNC RUN] Failed to auto-detect member secondary calendars:", err);
       }
+    } catch (err) {
+      console.error("[SYNC RUN] Failed to auto-detect user secondary calendars:", err);
     }
 
     const lastSyncedTime = user.googleSync.lastSyncedTime || new Date(Date.now() - 10 * 60 * 1000).toISOString();
